@@ -429,20 +429,46 @@
         <li class="step">
           <div class="step-num">5</div>
           <div class="step-body">
-            <div class="step-title">下のフォームにコピーしたコードを貼り付け</div>
-            <div class="step-desc">手順3でコピーした firebaseConfig の内容（{ } 全体）をそのまま下のテキストエリアに貼り付けて「保存」</div>
+            <div class="step-title">APIキーだけ下のフォームに入力して保存</div>
+            <div class="step-desc">Firebase Console →「設定（⚙）」→「プロジェクトの設定」→「全般」→「マイアプリ」→ <strong>apiKey</strong> の値をコピーして下に貼り付け</div>
           </div>
         </li>
       </ol>
     </div>
 
     <div class="form-wrap">
-      <div class="fgrp">
-        <label class="flbl">Firebase Config（{ } ごとそのまま貼り付け）</label>
-        <textarea id="fb-config-input" class="finput" rows="9"
-          placeholder='{&#10;  "apiKey": "AIzaSy...",&#10;  "authDomain": "your-app.firebaseapp.com",&#10;  "databaseURL": "https://your-app-default-rtdb.asia-southeast1.firebasedatabase.app",&#10;  "projectId": "your-app",&#10;  "storageBucket": "your-app.appspot.com",&#10;  "messagingSenderId": "123456789",&#10;  "appId": "1:123..."&#10;}'></textarea>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+        以下の項目はすでに入力済みです。<strong>apiKey だけ</strong>入力してください。
       </div>
-      <button class="btn-submit" onclick="saveFirebaseConfig()">設定を保存して再読み込み</button>
+      <div class="fgrp">
+        <label class="flbl">apiKey（Firebase Console → プロジェクトの設定 → マイアプリ）</label>
+        <input type="text" id="fb-apikey" class="finput" placeholder="AIzaSy...">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">authDomain</label>
+        <input type="text" id="fb-authdomain" class="finput" value="cash-management-654f6.firebaseapp.com">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">databaseURL</label>
+        <input type="text" id="fb-dburl" class="finput" value="https://cash-management-654f6-default-rtdb.asia-southeast1.firebasedatabase.app">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">projectId</label>
+        <input type="text" id="fb-projectid" class="finput" value="cash-management-654f6">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">storageBucket</label>
+        <input type="text" id="fb-bucket" class="finput" value="cash-management-654f6.firebasestorage.app">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">messagingSenderId</label>
+        <input type="text" id="fb-senderid" class="finput" value="531352480523">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">appId</label>
+        <input type="text" id="fb-appid" class="finput" value="1:531352480523:web:e7217b5d574550fd77d00e">
+      </div>
+      <button class="btn-submit" onclick="saveFirebaseConfig()">設定を保存して接続</button>
       <div id="fb-reset-wrap" style="display:none;margin-top:10px;">
         <button class="btn-submit red" onclick="resetFirebaseConfig()">Firebase設定をリセット（ローカルモードに戻す）</button>
       </div>
@@ -783,24 +809,20 @@ function closeOnBg(e,id){ if(e.target.id===id) document.getElementById(id).class
 //  FIREBASE CONFIG
 // ═══════════════════════════════════════
 function saveFirebaseConfig(){
-  const raw=document.getElementById('fb-config-input').value.trim();
-  try{
-    // Extract {...} block from any Firebase SDK snippet format
-    const block = raw.match(/\{[\s\S]*\}/);
-    if(!block) throw new Error('{ } が見つかりません。Firebase Consoleのconfigをそのまま貼り付けてください');
-    let text = block[0];
-    // Remove JS comments
-    text = text.replace(/\/\/.*$/gm,'').replace(/\/\*[\s\S]*?\*\//g,'');
-    // Quote unquoted keys:  apiKey: → "apiKey":
-    text = text.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,'$1"$2":');
-    // Remove trailing commas before } or ]
-    text = text.replace(/,(\s*[}\]])/g,'$1');
-    const cfg=JSON.parse(text);
-    if(!cfg.apiKey||!cfg.databaseURL) throw new Error('databaseURL が含まれていません。\nFirebase Console → Realtime Database の URL が config に入っているか確認してください');
-    localStorage.setItem('fb_config',JSON.stringify(cfg));
-    alert('Firebase設定を保存しました。再読み込みします。');
-    location.reload();
-  }catch(e){ alert('設定の読み込みに失敗しました:\n'+e.message); }
+  const get=id=>document.getElementById(id).value.trim();
+  const apiKey=get('fb-apikey');
+  const authDomain=get('fb-authdomain');
+  const databaseURL=get('fb-dburl');
+  const projectId=get('fb-projectid');
+  const storageBucket=get('fb-bucket');
+  const messagingSenderId=get('fb-senderid');
+  const appId=get('fb-appid');
+  if(!apiKey){ alert('apiKey を入力してください'); return; }
+  if(!databaseURL){ alert('databaseURL を入力してください'); return; }
+  const cfg={apiKey,authDomain,databaseURL,projectId,storageBucket,messagingSenderId,appId};
+  localStorage.setItem('fb_config',JSON.stringify(cfg));
+  alert('設定を保存しました！接続します。');
+  location.reload();
 }
 function resetFirebaseConfig(){
   if(confirm('Firebase設定をリセットしてローカルモードに戻しますか？（データは保持されます）')){
