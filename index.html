@@ -888,17 +888,27 @@ async function initFirebase(config){
 // ═══════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════
+const DEFAULT_CONFIG={
+  apiKey:"AIzaSyCqkZCevnxWYU_-6xIGNEWSJiRsQSGV1GA",
+  authDomain:"cash-management-654f6.firebaseapp.com",
+  databaseURL:"https://cash-management-654f6-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"cash-management-654f6",
+  storageBucket:"cash-management-654f6.firebasestorage.app",
+  messagingSenderId:"531352480523",
+  appId:"1:531352480523:web:e7217b5d574550fd77d00e"
+};
+
 loadLocal();
 document.getElementById('c-date').value=today();
 renderAll();
 
-// Show reset button if already configured
 if(localStorage.getItem('fb_config')){
   document.getElementById('fb-reset-wrap').style.display='block';
 }
 
 try{
-  const fc=JSON.parse(localStorage.getItem('fb_config')||'null');
+  const saved=localStorage.getItem('fb_config');
+  const fc=saved?JSON.parse(saved):DEFAULT_CONFIG;
   if(fc&&fc.apiKey) initFirebase(fc);
 }catch(e){}
 </script>
