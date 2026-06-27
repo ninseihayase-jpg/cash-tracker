@@ -785,12 +785,22 @@ function closeOnBg(e,id){ if(e.target.id===id) document.getElementById(id).class
 function saveFirebaseConfig(){
   const raw=document.getElementById('fb-config-input').value.trim();
   try{
-    const cfg=JSON.parse(raw);
-    if(!cfg.apiKey||!cfg.databaseURL) throw new Error('apiKey と databaseURL が必要です');
+    // Extract {...} block from any Firebase SDK snippet format
+    const block = raw.match(/\{[\s\S]*\}/);
+    if(!block) throw new Error('{ } が見つかりません。Firebase Consoleのconfigをそのまま貼り付けてください');
+    let text = block[0];
+    // Remove JS comments
+    text = text.replace(/\/\/.*$/gm,'').replace(/\/\*[\s\S]*?\*\//g,'');
+    // Quote unquoted keys:  apiKey: → "apiKey":
+    text = text.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,'$1"$2":');
+    // Remove trailing commas before } or ]
+    text = text.replace(/,(\s*[}\]])/g,'$1');
+    const cfg=JSON.parse(text);
+    if(!cfg.apiKey||!cfg.databaseURL) throw new Error('databaseURL が含まれていません。\nFirebase Console → Realtime Database の URL が config に入っているか確認してください');
     localStorage.setItem('fb_config',JSON.stringify(cfg));
     alert('Firebase設定を保存しました。再読み込みします。');
     location.reload();
-  }catch(e){ alert('JSON形式が正しくありません:\n'+e.message); }
+  }catch(e){ alert('設定の読み込みに失敗しました:\n'+e.message); }
 }
 function resetFirebaseConfig(){
   if(confirm('Firebase設定をリセットしてローカルモードに戻しますか？（データは保持されます）')){
