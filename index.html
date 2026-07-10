@@ -550,13 +550,14 @@ async function dbDel(path,id){
 function stats(){
   const cs=Object.values(data.contributions||{});
   const ws=Object.values(data.withdrawals||{});
-  const bs=Object.values(data.balances||{});
   const tc=cs.reduce((s,c)=>s+(c.amount||0),0);
   const tw=ws.reduce((s,w)=>s+(w.amount||0),0);
   const cel=cs.filter(c=>c.category==='タッキーちゃんのお祝い金').reduce((s,c)=>s+c.amount,0);
   const net=tc-tw;
-  const lb=bs.length?bs.sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
-  const bal=lb?lb.balance:0;
+  // getBalByMonth()で月ごとに重複排除してから最新月を取得
+  const byMonth=getBalByMonth();
+  const months=Object.keys(byMonth).sort();
+  const bal=months.length?byMonth[months[months.length-1]].balance:0;
   return{tc,tw,cel,net,bal,gain:bal-net};
 }
 function milestones(){
