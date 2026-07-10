@@ -17,7 +17,7 @@
       --green:#1A7A4A; --green-lt:#EDFAF3;
       --red:#C23B22; --red-lt:#FEF1EE;
       --amber:#A85C00; --amber-lt:#FEF6E8;
-      --nav-h:62px; --hdr-h:150px;
+      --nav-h:62px; --hdr-h:110px;
       /* dataviz categorical palette (validated order) */
       --c1:#2a78d6; --c2:#1baf7a; --c3:#eda100;
       --c-gain:#0ca30c; --c-loss:#d03b3b;
@@ -40,14 +40,13 @@
     .hdr-logo{font-size:14px;font-weight:700;color:#fff;letter-spacing:.03em;}
     .hdr-badge{font-size:10px;font-weight:600;color:rgba(255,255,255,.6);
       background:rgba(255,255,255,.1);border-radius:20px;padding:3px 9px;}
-    .hdr-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+    .hdr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
     .hdr-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);
-      border-radius:10px;padding:6px 10px;}
-    .hdr-stat.sm{padding:5px 10px;}
-    .hdr-lbl{font-size:9px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:2px;}
-    .hdr-val{font-size:17px;font-weight:800;color:#fff;line-height:1;}
-    .hdr-val.sm{font-size:14px;}
-    .hdr-sub{font-size:10px;margin-top:2px;font-weight:500;}
+      border-radius:9px;padding:5px 6px;}
+    .hdr-lbl{font-size:8px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:2px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .hdr-val{font-size:13px;font-weight:800;color:#fff;line-height:1;}
+    .hdr-sub{font-size:9px;margin-top:2px;font-weight:500;}
     .pos{color:#6EE7A8;} .neg{color:#FCA5A5;} .neu{color:rgba(255,255,255,.65);}
 
     /* ── NAV ── */
@@ -195,22 +194,21 @@
   </div>
   <div class="hdr-grid">
     <div class="hdr-stat">
-      <div class="hdr-lbl">口座残高（楽天証券）</div>
+      <div class="hdr-lbl">口座残高</div>
       <div class="hdr-val" id="hdr-balance">¥0</div>
       <div class="hdr-sub" id="hdr-gain">収益 ¥0</div>
     </div>
     <div class="hdr-stat">
       <div class="hdr-lbl">純出資額</div>
       <div class="hdr-val" id="hdr-net">¥0</div>
-      <div class="hdr-sub" id="hdr-net-sub" style="color:rgba(255,255,255,.5);">出資¥0 ー 引出¥0</div>
     </div>
-    <div class="hdr-stat sm">
-      <div class="hdr-lbl">達生お祝い金合計</div>
-      <div class="hdr-val sm" id="hdr-celebration">¥0</div>
+    <div class="hdr-stat">
+      <div class="hdr-lbl">達生お祝い金</div>
+      <div class="hdr-val" id="hdr-celebration">¥0</div>
     </div>
-    <div class="hdr-stat sm">
-      <div class="hdr-lbl">引き出し金合計</div>
-      <div class="hdr-val sm" id="hdr-withdraw-total">¥0</div>
+    <div class="hdr-stat">
+      <div class="hdr-lbl">引き出し合計</div>
+      <div class="hdr-val" id="hdr-withdraw-total">¥0</div>
     </div>
   </div>
 </header>
@@ -247,13 +245,15 @@
     </div>
     <!-- Legend -->
     <div id="chart-legend" style="display:none;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:8px 12px;">
-      <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:10px;color:var(--muted);">
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c1);margin-right:3px;"></span>達生お祝い金</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c-contrib);margin-right:3px;"></span>にん出資</span>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:10px;color:var(--muted);">
+        <span style="font-weight:600;color:var(--text);">入金：</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2a78d6;margin-right:3px;"></span>達生お祝い金</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>にん出資</span>
         <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e87ba4;margin-right:3px;"></span>あみ出資</span>
-        <span style="margin-left:6px;"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c-contrib);margin-right:3px;"></span>純出資</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c-gain);margin-right:3px;"></span>収益</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c-loss);margin-right:3px;"></span>損失</span>
+        <span style="margin-left:4px;font-weight:600;color:var(--text);">残高：</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>純出資額</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1baf7a;margin-right:3px;"></span>収益</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d03b3b;margin-right:3px;"></span>損失</span>
       </div>
     </div>
   </div>
@@ -558,10 +558,9 @@ function renderHdr(){
   const{tc,tw,cel,net,bal,gain}=stats();
   document.getElementById('hdr-balance').textContent=fm(bal);
   const ge=document.getElementById('hdr-gain');
-  ge.textContent=(gain>=0?'収益 +':'収益 ')+fm(gain);
+  ge.textContent=(gain>=0?'+':'')+fm(gain);
   ge.className='hdr-sub '+(gain>0?'pos':gain<0?'neg':'neu');
   document.getElementById('hdr-net').textContent=fm(net);
-  document.getElementById('hdr-net-sub').textContent=`出資${fm(tc)} ー 引出${fm(tw)}`;
   document.getElementById('hdr-celebration').textContent=fm(cel);
   document.getElementById('hdr-withdraw-total').textContent=fm(tw);
 }
@@ -666,12 +665,19 @@ function getContribData(){
   const cats=['タッキーちゃんのお祝い金','にんの出資','あみの出資'];
   const colors=['#2a78d6','#eb6834','#e87ba4'];
   const labels=months.map(m=>{const[,mo]=m.split('-');return+mo+'月';});
-  return{labels,datasets:cats.map((cat,i)=>({
-    label:cat.replace('のお祝い金','').replace('の出資',''),
-    data:months.map(m=>all.filter(c=>c.date.slice(0,7)===m&&c.category===cat).reduce((s,c)=>s+c.amount,0)),
-    backgroundColor:colors[i],borderRadius:3,stack:'c',
-    borderWidth:1,borderColor:'rgba(255,255,255,.3)'
-  }))};
+  // 累積：各月の棒グラフ高さ = その月までの合計
+  return{labels,datasets:cats.map((cat,i)=>{
+    let cum=0;
+    return{
+      label:cat.replace('のお祝い金','').replace('の出資',''),
+      data:months.map(m=>{
+        cum+=all.filter(c=>c.date.slice(0,7)===m&&c.category===cat).reduce((s,c)=>s+c.amount,0);
+        return cum;
+      }),
+      backgroundColor:colors[i],borderRadius:3,stack:'c',
+      borderWidth:1,borderColor:'rgba(255,255,255,.3)'
+    };
+  })};
 }
 
 function getBalData(){
@@ -686,14 +692,14 @@ function getBalData(){
     const tw=ws.filter(w=>w.date.slice(0,7)<=ym).reduce((s,w)=>s+w.amount,0);
     return tc-tw;
   });
-  const balArr=bals.map(b=>b.balance);
+  // 収益 = 残高 - 純出資額（正=利益, 負=損失）
+  const gainArr=bals.map((b,i)=>b.balance-netArr[i]);
   return{labels,datasets:[
-    {type:'bar',label:'口座残高',data:balArr,
-      backgroundColor:balArr.map((b,i)=>b>=netArr[i]?'#1baf7a':'#d03b3b'),
-      borderRadius:3,borderWidth:1,borderColor:'rgba(255,255,255,.3)'},
-    {type:'line',label:'純出資額',data:netArr,
-      borderColor:'#eb6834',backgroundColor:'transparent',
-      borderWidth:2,pointRadius:2,pointBackgroundColor:'#eb6834',tension:0.3}
+    {label:'純出資額',data:netArr,backgroundColor:'#eb6834',
+      borderRadius:3,stack:'b',borderWidth:1,borderColor:'rgba(255,255,255,.3)'},
+    {label:'投資収益',data:gainArr,
+      backgroundColor:gainArr.map(g=>g>=0?'#1baf7a':'#d03b3b'),
+      borderRadius:3,stack:'b',borderWidth:1,borderColor:'rgba(255,255,255,.3)'}
   ]};
 }
 
@@ -716,7 +722,7 @@ function renderCharts(){
   if(d2){
     e2.style.display='none';
     chart2=new Chart(document.getElementById('chart-balance').getContext('2d'),
-      {type:'bar',data:d2,options:chartOpts(false)});
+      {type:'bar',data:d2,options:chartOpts(true)});
   } else { e2.style.display='block'; }
 }
 
