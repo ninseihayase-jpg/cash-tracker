@@ -251,7 +251,7 @@
         <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>にん出資</span>
         <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e87ba4;margin-right:3px;"></span>あみ出資</span>
         <span style="margin-left:4px;font-weight:600;color:var(--text);">残高：</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>純出資額</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B0ACAA;margin-right:3px;"></span>純出資額</span>
         <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1baf7a;margin-right:3px;"></span>収益</span>
         <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d03b3b;margin-right:3px;"></span>損失</span>
       </div>
@@ -695,7 +695,7 @@ function getBalData(){
   // 収益 = 残高 - 純出資額（正=利益, 負=損失）
   const gainArr=bals.map((b,i)=>b.balance-netArr[i]);
   return{labels,datasets:[
-    {label:'純出資額',data:netArr,backgroundColor:'#eb6834',
+    {label:'純出資額',data:netArr,backgroundColor:'#B0ACAA',
       borderRadius:3,stack:'b',borderWidth:1,borderColor:'rgba(255,255,255,.3)'},
     {label:'投資収益',data:gainArr,
       backgroundColor:gainArr.map(g=>g>=0?'#1baf7a':'#d03b3b'),
