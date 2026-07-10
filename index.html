@@ -737,7 +737,7 @@ function getContribData(){
   const months=[...new Set(all.map(c=>c.date.slice(0,7)))].sort();
   const cats=['タッキーちゃんのお祝い金','にんの出資','あみの出資'];
   const colors=['#2a78d6','#eb6834','#e87ba4'];
-  const labels=months.map(m=>{const[,mo]=m.split('-');return+mo+'月';});
+  const labels=months.map((m,i)=>{const[y,mo]=m.split('-');const py=i>0?months[i-1].split('-')[0]:null;return py!==y?[`${+mo}月`,y]:`${+mo}月`;});
   // 累積：各月の棒グラフ高さ = その月までの合計
   return{labels,datasets:cats.map((cat,i)=>{
     let cum=0;
@@ -760,7 +760,7 @@ function getBalData(){
   const bals=sortedMonths.map(m=>byMonth[m]);
   const cs=Object.values(data.contributions||{});
   const ws=Object.values(data.withdrawals||{});
-  const labels=sortedMonths.map(m=>{const[,mo]=m.split('-');return+mo+'月';});
+  const labels=sortedMonths.map((m,i)=>{const[y,mo]=m.split('-');const py=i>0?sortedMonths[i-1].split('-')[0]:null;return py!==y?[`${+mo}月`,y]:`${+mo}月`;});
   const netArr=sortedMonths.map(ym=>{
     const tc=cs.filter(c=>c.date.slice(0,7)<=ym).reduce((s,c)=>s+c.amount,0);
     const tw=ws.filter(w=>w.date.slice(0,7)<=ym).reduce((s,w)=>s+w.amount,0);
