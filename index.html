@@ -138,13 +138,14 @@
     .bal-inline-input::placeholder{font-weight:400;font-size:12px;color:var(--border);}
 
     /* ── BALANCE HISTORY ── */
-    .bal-row{display:flex;justify-content:space-between;align-items:center;
+    .bal-row{display:flex;align-items:center;
       padding:10px 14px;border-bottom:1px solid var(--border);}
     .bal-row:last-child{border-bottom:none;}
-    .bal-ym{font-size:13px;font-weight:600;color:var(--text);}
+    .bal-ym{font-size:13px;font-weight:600;color:var(--text);flex:1;}
     .bal-val{font-size:15px;font-weight:800;color:var(--text);}
-    .bal-right{display:flex;align-items:center;gap:6px;}
-    .bal-del{background:none;border:none;color:var(--border);cursor:pointer;font-size:16px;}
+    .bal-right{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+    .bal-del{background:none;border:none;color:var(--border);cursor:pointer;font-size:16px;
+      width:26px;text-align:center;flex-shrink:0;}
 
     /* ── FORMS ── */
     .form-wrap{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:16px 14px;}
@@ -692,14 +693,17 @@ function renderBal(){
   if(!months.length){el.innerHTML='<div class="empty">まず出資を記録してください</div>';return;}
   el.innerHTML=months.map(m=>{
     const entry=byMonth[m];
-    const val=entry?entry.balance:'';
+    const disp=entry?entry.balance.toLocaleString('ja-JP'):'';
     return`<div class="bal-row">
       <div class="bal-ym">${fdYM(m)}</div>
       <div class="bal-right">
-        <input type="number" class="bal-inline-input" data-month="${m}"
-          value="${esc(String(val))}" placeholder="未入力" inputmode="numeric"
-          onblur="saveBalMonth(this)" onkeydown="if(event.key==='Enter'){this.blur();}">
-        ${entry?`<button class="bal-del" onclick="clearBalMonth('${m}')">✕</button>`:'<span style="display:inline-block;width:26px;"></span>'}
+        <input type="text" class="bal-inline-input" data-month="${m}"
+          value="${esc(disp)}" placeholder="未入力" inputmode="numeric"
+          onfocus="this.value=this.value.replace(/,/g,'')"
+          onblur="saveBalMonth(this)"
+          onkeydown="if(event.key==='Enter')this.blur()">
+        <button class="bal-del" onclick="clearBalMonth('${m}')"
+          style="${entry?'':'visibility:hidden'}">✕</button>
       </div>
     </div>`;
   }).join('');
@@ -855,18 +859,21 @@ async function submitWithdrawal(){
 
 async function saveBalMonth(input){
   const month=input.dataset.month;
-  const val=input.value.trim();
-  if(!val||isNaN(+val)||+val<0)return;
-  await dbSet('balances',month,{date:month,balance:parseInt(val),updatedAt:Date.now()});
-  renderHdr();renderCharts();
-  // ✕ボタンの有無を更新
-  const row=input.parentElement;
-  if(!row.querySelector('.bal-del')){
-    const btn=document.createElement('button');
-    btn.className='bal-del';btn.textContent='✕';
-    btn.onclick=()=>clearBalMonth(month);
-    row.appendChild(btn);
+  const raw=input.value.replace(/,/g,'').trim();
+  if(!raw||isNaN(+raw)||+raw<0){
+    // 無効値ならDB値に戻す
+    const byMonth=getBalByMonth();
+    const entry=byMonth[month];
+    input.value=entry?entry.balance.toLocaleString('ja-JP'):'';
+    return;
   }
+  const balance=parseInt(raw);
+  input.value=balance.toLocaleString('ja-JP');
+  await dbSet('balances',month,{date:month,balance,updatedAt:Date.now()});
+  // ✕ボタンを表示
+  const delBtn=input.parentElement.querySelector('.bal-del');
+  if(delBtn)delBtn.style.visibility='visible';
+  renderHdr();renderCharts();
 }
 async function clearBalMonth(month){
   if(!confirm('この月の残高を削除しますか？'))return;
