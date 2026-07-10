@@ -703,6 +703,33 @@ function getBalData(){
   ]};
 }
 
+function makeMsPlugin(){
+  return{
+    id:'ms-lines',
+    afterDraw(chart){
+      const msList=milestones();
+      if(!msList.length)return;
+      const{ctx,scales:{x,y}}=chart;
+      msList.forEach(ms=>{
+        const py=y.getPixelForValue(ms.cum);
+        if(py<y.top-2||py>y.bottom+2)return;
+        ctx.save();
+        ctx.strokeStyle='rgba(212,96,58,.8)';
+        ctx.lineWidth=1.2;
+        ctx.setLineDash([5,3]);
+        ctx.beginPath();ctx.moveTo(x.left,py);ctx.lineTo(x.right,py);ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='rgba(212,96,58,.95)';
+        ctx.font='bold 8px system-ui,-apple-system,sans-serif';
+        ctx.textAlign='right';ctx.textBaseline='bottom';
+        const lbl=ms.purpose.length>8?ms.purpose.slice(0,7)+'…':ms.purpose;
+        ctx.fillText(lbl,x.right,py-2);
+        ctx.restore();
+      });
+    }
+  };
+}
+
 function renderCharts(){
   if(typeof Chart==='undefined')return;
   const d1=getContribData(),d2=getBalData();
@@ -714,7 +741,7 @@ function renderCharts(){
   if(d1){
     e1.style.display='none';
     chart1=new Chart(document.getElementById('chart-contrib').getContext('2d'),
-      {type:'bar',data:d1,options:chartOpts(true)});
+      {type:'bar',data:d1,options:chartOpts(true),plugins:[makeMsPlugin()]});
     legendEl.style.display='block';
   } else { e1.style.display='block'; }
 
@@ -722,7 +749,7 @@ function renderCharts(){
   if(d2){
     e2.style.display='none';
     chart2=new Chart(document.getElementById('chart-balance').getContext('2d'),
-      {type:'bar',data:d2,options:chartOpts(true)});
+      {type:'bar',data:d2,options:chartOpts(true),plugins:[makeMsPlugin()]});
   } else { e2.style.display='block'; }
 }
 
