@@ -129,7 +129,13 @@
     .hist-amt-pos{font-size:14px;font-weight:800;color:var(--green);white-space:nowrap;}
     .hist-amt-neg{font-size:14px;font-weight:800;color:var(--red);white-space:nowrap;}
     .hist-date{font-size:11px;color:var(--muted);margin-top:1px;}
-    .row-del{background:none;border:none;color:var(--border);cursor:pointer;padding:2px 0 2px 8px;font-size:16px;flex-shrink:0;}
+    .row-del{background:none;border:none;color:var(--border);cursor:pointer;padding:2px 0 2px 6px;font-size:16px;flex-shrink:0;}
+    .row-edit{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px 2px 8px;font-size:15px;flex-shrink:0;}
+    .bal-inline-input{width:110px;padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;
+      font-size:14px;font-weight:700;color:var(--text);background:#fff;text-align:right;
+      outline:none;-webkit-appearance:none;font-family:inherit;}
+    .bal-inline-input:focus{border-color:var(--accent);}
+    .bal-inline-input::placeholder{font-weight:400;font-size:12px;color:var(--border);}
 
     /* ── BALANCE HISTORY ── */
     .bal-row{display:flex;justify-content:space-between;align-items:center;
@@ -325,22 +331,12 @@
 
 <!-- ═══ BALANCE ═══ -->
 <div id="pg-balance" class="page">
-  <div class="form-wrap" style="margin-bottom:16px;">
-    <div class="form-title">証券口座残高入力</div>
-    <div class="fgrp">
-      <label class="flbl">年月</label>
-      <input type="month" id="b-month" class="finput">
-    </div>
-    <div class="fgrp">
-      <label class="flbl">残高（円）</label>
-      <input type="number" id="b-amount" class="finput" placeholder="1500000" inputmode="numeric">
-    </div>
-    <button class="btn-submit" onclick="submitBalance()">記録する</button>
-  </div>
-
   <div class="sec">
-    <div class="sec-hdr"><span class="sec-title">残高履歴</span></div>
-    <div class="card" id="bal-hist"><div class="empty">残高履歴がありません</div></div>
+    <div class="sec-hdr">
+      <span class="sec-title">月次残高（楽天証券）</span>
+      <span style="font-size:11px;color:var(--muted);">金額を入力してEnter</span>
+    </div>
+    <div class="card" id="bal-list"><div class="empty">まず出資を記録してください</div></div>
   </div>
 </div>
 
@@ -485,6 +481,40 @@
   </div>
 </div>
 
+<!-- ═══ MODAL: EDIT CONTRIBUTION ═══ -->
+<div class="modal-overlay" id="modal-edit-c" onclick="closeOnBg(event,'modal-edit-c')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">出資を編集</div>
+    <input type="hidden" id="ec-id">
+    <div class="fgrp"><label class="flbl">日付</label><input type="date" id="ec-date" class="finput"></div>
+    <div class="fgrp"><label class="flbl">分類</label>
+      <select id="ec-cat" class="fselect">
+        <option value="タッキーちゃんのお祝い金">タッキーちゃんのお祝い金</option>
+        <option value="にんの出資">にんの出資</option>
+        <option value="あみの出資">あみの出資</option>
+      </select>
+    </div>
+    <div class="fgrp"><label class="flbl">詳細</label><input type="text" id="ec-detail" class="finput"></div>
+    <div class="fgrp"><label class="flbl">金額（円）</label><input type="number" id="ec-amount" class="finput" inputmode="numeric"></div>
+    <button class="btn-submit" onclick="saveEditC()">更新する</button>
+  </div>
+</div>
+
+<!-- ═══ MODAL: EDIT WITHDRAWAL ═══ -->
+<div class="modal-overlay" id="modal-edit-w" onclick="closeOnBg(event,'modal-edit-w')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">引き出しを編集</div>
+    <input type="hidden" id="ew-id">
+    <div class="fgrp"><label class="flbl">日付</label><input type="date" id="ew-date" class="finput"></div>
+    <div class="fgrp"><label class="flbl">目的</label><input type="text" id="ew-purpose" class="finput"></div>
+    <div class="fgrp"><label class="flbl">詳細</label><input type="text" id="ew-detail" class="finput"></div>
+    <div class="fgrp"><label class="flbl">金額（円）</label><input type="number" id="ew-amount" class="finput" inputmode="numeric"></div>
+    <button class="btn-submit red" onclick="saveEditW()">更新する</button>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════
 //  DATA
@@ -524,7 +554,7 @@ function stats(){
   const tw=ws.reduce((s,w)=>s+(w.amount||0),0);
   const cel=cs.filter(c=>c.category==='タッキーちゃんのお祝い金').reduce((s,c)=>s+c.amount,0);
   const net=tc-tw;
-  const lb=bs.sort((a,b)=>b.createdAt-a.createdAt)[0];
+  const lb=bs.length?bs.sort((a,b)=>b.date.localeCompare(a.date))[0]:null;
   const bal=lb?lb.balance:0;
   return{tc,tw,cel,net,bal,gain:bal-net};
 }
@@ -611,6 +641,7 @@ function renderContrib(){
     items.forEach(c=>{html+=`<div class="hist-row">
       <div class="hist-dot ${CAT_DOT[cat]||'d-nin'}"></div>
       <div class="hist-body"><div class="hist-top"><span class="hist-label">${esc(c.detail)}</span><span class="hist-amt-pos">${fm(c.amount)}</span></div><div class="hist-date">${fd(c.date)}</div></div>
+      <button class="row-edit" onclick="openEditC('${c.id}')">✎</button>
       <button class="row-del" onclick="delContrib('${c.id}')">✕</button></div>`;});
   });
   el.innerHTML=html;
@@ -623,17 +654,55 @@ function renderWithdraw(){
   el.innerHTML=all.map(w=>`<div class="hist-row">
     <div class="hist-dot d-withdraw"></div>
     <div class="hist-body"><div class="hist-top"><span class="hist-label">${esc(w.purpose)}${w.detail?'：'+esc(w.detail):''}</span><span class="hist-amt-neg">-${fm(w.amount)}</span></div><div class="hist-date">${fd(w.date)}</div></div>
+    <button class="row-edit" onclick="openEditW('${w.id}')">✎</button>
     <button class="row-del" onclick="delWithdraw('${w.id}')">✕</button></div>`).join('');
 }
 
+function getMonthRange(){
+  const now=thisMonth();
+  const allDates=[
+    ...Object.values(data.contributions||{}).map(c=>c.date.slice(0,7)),
+    ...Object.values(data.withdrawals||{}).map(w=>w.date.slice(0,7)),
+    ...Object.values(data.balances||{}).map(b=>b.date.slice(0,7))
+  ];
+  const earliest=allDates.length?[...allDates].sort()[0]:now;
+  const months=[];let cur=earliest;
+  while(cur<=now){
+    months.push(cur);
+    const[y,m]=cur.split('-').map(Number);
+    cur=m===12?`${y+1}-01`:`${y}-${String(m+1).padStart(2,'0')}`;
+  }
+  return months.reverse();
+}
+
+function getBalByMonth(){
+  const byMonth={};
+  Object.values(data.balances||{}).forEach(b=>{
+    const m=b.date.slice(0,7);
+    if(!byMonth[m]||(b.updatedAt||b.createdAt||0)>(byMonth[m].updatedAt||byMonth[m].createdAt||0))
+      byMonth[m]=b;
+  });
+  return byMonth;
+}
+
 function renderBal(){
-  const all=Object.values(data.balances||{}).sort((a,b)=>b.createdAt-a.createdAt);
-  const el=document.getElementById('bal-hist');
-  if(!all.length){el.innerHTML='<div class="empty">残高履歴がありません</div>';return;}
-  el.innerHTML=all.map(b=>`<div class="bal-row">
-    <div class="bal-ym">${fdYM(b.date)}</div>
-    <div class="bal-right"><span class="bal-val">${fm(b.balance)}</span><button class="bal-del" onclick="delBal('${b.id}')">✕</button></div>
-    </div>`).join('');
+  const months=getMonthRange();
+  const byMonth=getBalByMonth();
+  const el=document.getElementById('bal-list');
+  if(!months.length){el.innerHTML='<div class="empty">まず出資を記録してください</div>';return;}
+  el.innerHTML=months.map(m=>{
+    const entry=byMonth[m];
+    const val=entry?entry.balance:'';
+    return`<div class="bal-row">
+      <div class="bal-ym">${fdYM(m)}</div>
+      <div class="bal-right">
+        <input type="number" class="bal-inline-input" data-month="${m}"
+          value="${esc(String(val))}" placeholder="未入力" inputmode="numeric"
+          onblur="saveBalMonth(this)" onkeydown="if(event.key==='Enter'){this.blur();}">
+        ${entry?`<button class="bal-del" onclick="clearBalMonth('${m}')">✕</button>`:'<span style="display:inline-block;width:26px;"></span>'}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════
@@ -681,13 +750,14 @@ function getContribData(){
 }
 
 function getBalData(){
-  const bals=Object.values(data.balances||{}).sort((a,b)=>a.date.localeCompare(b.date));
-  if(!bals.length)return null;
+  const byMonth=getBalByMonth();
+  const sortedMonths=Object.keys(byMonth).sort();
+  if(!sortedMonths.length)return null;
+  const bals=sortedMonths.map(m=>byMonth[m]);
   const cs=Object.values(data.contributions||{});
   const ws=Object.values(data.withdrawals||{});
-  const labels=bals.map(b=>{const[,m]=b.date.slice(0,7).split('-');return+m+'月';});
-  const netArr=bals.map(b=>{
-    const ym=b.date.slice(0,7);
+  const labels=sortedMonths.map(m=>{const[,mo]=m.split('-');return+mo+'月';});
+  const netArr=sortedMonths.map(ym=>{
     const tc=cs.filter(c=>c.date.slice(0,7)<=ym).reduce((s,c)=>s+c.amount,0);
     const tw=ws.filter(w=>w.date.slice(0,7)<=ym).reduce((s,w)=>s+w.amount,0);
     return tc-tw;
@@ -783,14 +853,25 @@ async function submitWithdrawal(){
   renderAll();alert('記録しました！');
 }
 
-async function submitBalance(){
-  const month=document.getElementById('b-month').value;
-  const balance=parseInt(document.getElementById('b-amount').value);
-  if(!month||isNaN(balance)||balance<0){alert('年月と残高を入力してください');return;}
-  const id=uid();
-  await dbSet('balances',id,{id,date:month,balance,createdAt:Date.now()});
-  document.getElementById('b-amount').value='';
-  renderAll();alert('記録しました！');
+async function saveBalMonth(input){
+  const month=input.dataset.month;
+  const val=input.value.trim();
+  if(!val||isNaN(+val)||+val<0)return;
+  await dbSet('balances',month,{date:month,balance:parseInt(val),updatedAt:Date.now()});
+  renderHdr();renderCharts();
+  // ✕ボタンの有無を更新
+  const row=input.parentElement;
+  if(!row.querySelector('.bal-del')){
+    const btn=document.createElement('button');
+    btn.className='bal-del';btn.textContent='✕';
+    btn.onclick=()=>clearBalMonth(month);
+    row.appendChild(btn);
+  }
+}
+async function clearBalMonth(month){
+  if(!confirm('この月の残高を削除しますか？'))return;
+  await dbDel('balances',month);
+  renderAll();
 }
 
 async function submitMilestone(){
@@ -816,6 +897,51 @@ async function delBal(id){if(confirm('削除しますか？')){await dbDel('bala
 async function delMS(id){if(confirm('削除しますか？')){await dbDel('milestones',id);renderAll();}}
 
 // ═══════════════════════════════════════
+//  EDIT
+// ═══════════════════════════════════════
+function openEditC(id){
+  const c=data.contributions[id];if(!c)return;
+  document.getElementById('ec-id').value=id;
+  document.getElementById('ec-date').value=c.date;
+  document.getElementById('ec-cat').value=c.category;
+  document.getElementById('ec-detail').value=c.detail;
+  document.getElementById('ec-amount').value=c.amount;
+  openModal('modal-edit-c');
+}
+async function saveEditC(){
+  const id=document.getElementById('ec-id').value;
+  const date=document.getElementById('ec-date').value;
+  const category=document.getElementById('ec-cat').value;
+  const detail=document.getElementById('ec-detail').value.trim();
+  const amount=parseInt(document.getElementById('ec-amount').value);
+  if(!date||!detail||!amount||amount<=0){alert('全項目を入力してください');return;}
+  await dbSet('contributions',id,{...data.contributions[id],date,category,detail,amount});
+  document.getElementById('modal-edit-c').classList.remove('open');
+  renderAll();
+}
+
+function openEditW(id){
+  const w=data.withdrawals[id];if(!w)return;
+  document.getElementById('ew-id').value=id;
+  document.getElementById('ew-date').value=w.date;
+  document.getElementById('ew-purpose').value=w.purpose;
+  document.getElementById('ew-detail').value=w.detail||'';
+  document.getElementById('ew-amount').value=w.amount;
+  openModal('modal-edit-w');
+}
+async function saveEditW(){
+  const id=document.getElementById('ew-id').value;
+  const date=document.getElementById('ew-date').value;
+  const purpose=document.getElementById('ew-purpose').value.trim();
+  const detail=document.getElementById('ew-detail').value.trim();
+  const amount=parseInt(document.getElementById('ew-amount').value);
+  if(!date||!purpose||!amount||amount<=0){alert('全項目を入力してください');return;}
+  await dbSet('withdrawals',id,{...data.withdrawals[id],date,purpose,detail,amount});
+  document.getElementById('modal-edit-w').classList.remove('open');
+  renderAll();
+}
+
+// ═══════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════
 function showPage(name,btn){
@@ -823,10 +949,9 @@ function showPage(name,btn){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('pg-'+name).classList.add('active');
   btn.classList.add('active');
-  const t=today(),m=thisMonth();
+  const t=today();
   if(name==='contribute'&&!document.getElementById('c-date').value)document.getElementById('c-date').value=t;
   if(name==='withdraw'&&!document.getElementById('w-date').value)document.getElementById('w-date').value=t;
-  if(name==='balance'&&!document.getElementById('b-month').value)document.getElementById('b-month').value=m;
   if(name==='home')renderCharts();
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
