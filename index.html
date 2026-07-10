@@ -7,273 +7,193 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#1A1814">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
     :root{
-      --bg:#F7F5F2;
-      --card:#FFFFFF;
-      --hdr:#1A1814;
-      --text:#1A1714;
-      --muted:#8C8480;
-      --border:#EAE5DC;
-      --accent:#D4603A;
-      --accent-lt:#FBF0EB;
-      --green:#1A7A4A;
-      --green-lt:#EDFAF3;
-      --red:#C23B22;
-      --red-lt:#FEF1EE;
-      --amber:#A85C00;
-      --amber-lt:#FEF6E8;
-      --nav-h:62px;
-      --hdr-h:106px;
+      --bg:#F7F5F2; --card:#FFFFFF; --hdr:#1A1814;
+      --text:#1A1714; --muted:#8C8480; --border:#EAE5DC;
+      --accent:#D4603A; --accent-lt:#FBF0EB;
+      --green:#1A7A4A; --green-lt:#EDFAF3;
+      --red:#C23B22; --red-lt:#FEF1EE;
+      --amber:#A85C00; --amber-lt:#FEF6E8;
+      --nav-h:62px; --hdr-h:150px;
+      /* dataviz categorical palette (validated order) */
+      --c1:#2a78d6; --c2:#1baf7a; --c3:#eda100;
+      --c-gain:#0ca30c; --c-loss:#d03b3b;
+      --c-contrib:#eb6834;
     }
     body{
       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif;
-      background:var(--bg);color:var(--text);
-      min-height:100vh;
-      padding-top:var(--hdr-h);
-      padding-bottom:var(--nav-h);
-      font-size:14px;
-      -webkit-font-smoothing:antialiased;
+      background:var(--bg);color:var(--text);min-height:100vh;
+      padding-top:var(--hdr-h);padding-bottom:var(--nav-h);
+      font-size:14px;-webkit-font-smoothing:antialiased;
     }
 
-    /* ── STICKY HEADER ── */
+    /* ── HEADER ── */
     .hdr{
       position:fixed;top:0;left:0;right:0;z-index:200;
-      background:var(--hdr);
-      padding:10px 14px 10px;
+      background:var(--hdr);padding:10px 12px 10px;
       box-shadow:0 1px 0 rgba(255,255,255,.06);
     }
-    .hdr-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+    .hdr-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
     .hdr-logo{font-size:14px;font-weight:700;color:#fff;letter-spacing:.03em;}
-    .hdr-badge{
-      font-size:10px;font-weight:600;color:rgba(255,255,255,.6);
-      background:rgba(255,255,255,.1);border-radius:20px;padding:3px 9px;
-    }
-    .hdr-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
-    .hdr-stat{
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:10px;padding:7px 10px;
-    }
-    .hdr-lbl{font-size:10px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:3px;}
-    .hdr-val{font-size:18px;font-weight:800;color:#fff;line-height:1;}
-    .hdr-sub{font-size:10px;margin-top:3px;font-weight:500;}
-    .pos{color:#6EE7A8;} .neg{color:#FCA5A5;} .neu{color:rgba(255,255,255,.7);}
+    .hdr-badge{font-size:10px;font-weight:600;color:rgba(255,255,255,.6);
+      background:rgba(255,255,255,.1);border-radius:20px;padding:3px 9px;}
+    .hdr-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+    .hdr-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);
+      border-radius:10px;padding:6px 10px;}
+    .hdr-stat.sm{padding:5px 10px;}
+    .hdr-lbl{font-size:9px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:2px;}
+    .hdr-val{font-size:17px;font-weight:800;color:#fff;line-height:1;}
+    .hdr-val.sm{font-size:14px;}
+    .hdr-sub{font-size:10px;margin-top:2px;font-weight:500;}
+    .pos{color:#6EE7A8;} .neg{color:#FCA5A5;} .neu{color:rgba(255,255,255,.65);}
 
-    /* ── BOTTOM NAV ── */
-    .bot-nav{
-      position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+    /* ── NAV ── */
+    .bot-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
       background:var(--card);border-top:1px solid var(--border);
-      display:flex;z-index:200;
-      padding-bottom:env(safe-area-inset-bottom,0);
-    }
-    .nav-btn{
-      flex:1;display:flex;flex-direction:column;align-items:center;
-      justify-content:center;gap:3px;border:none;background:none;
-      cursor:pointer;color:var(--muted);font-size:10px;font-weight:600;
-      transition:color .15s;
-    }
+      display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom,0);}
+    .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:2px;border:none;background:none;
+      cursor:pointer;color:var(--muted);font-size:9px;font-weight:600;
+      transition:color .15s;padding-bottom:2px;}
     .nav-btn.active{color:var(--accent);}
-    .nav-btn svg{width:20px;height:20px;}
+    .nav-btn svg{width:19px;height:19px;}
 
     /* ── PAGES ── */
-    .page{display:none;padding:16px 14px 20px;}
+    .page{display:none;padding:14px 12px 20px;}
     .page.active{display:block;}
 
     /* ── CARD ── */
-    .card{
-      background:var(--card);border-radius:16px;
-      border:1px solid var(--border);
-      box-shadow:0 1px 3px rgba(0,0,0,.04);
-      overflow:hidden;margin-bottom:12px;
-    }
+    .card{background:var(--card);border-radius:16px;border:1px solid var(--border);
+      box-shadow:0 1px 3px rgba(0,0,0,.04);overflow:hidden;margin-bottom:12px;}
 
     /* ── SECTION ── */
-    .sec{margin-bottom:20px;}
+    .sec{margin-bottom:18px;}
     .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-    .sec-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
-    .btn-add{
-      background:var(--accent-lt);color:var(--accent);
-      border:none;border-radius:20px;padding:5px 13px;
-      font-size:12px;font-weight:700;cursor:pointer;
-      transition:background .15s;
-    }
-    .btn-add:active{background:#F5D8CC;}
+    .sec-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+    .btn-add{background:var(--accent-lt);color:var(--accent);border:none;border-radius:20px;
+      padding:5px 13px;font-size:12px;font-weight:700;cursor:pointer;}
 
-    /* ── MILESTONE HORIZONTAL SCROLL ── */
-    .ms-scroll{
-      display:flex;gap:10px;
-      overflow-x:auto;overflow-y:visible;
-      scroll-snap-type:x mandatory;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;
-      margin:0 -14px;
-      padding:2px 14px 10px;
-    }
+    /* ── MILESTONE H-SCROLL ── */
+    .ms-scroll{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;scrollbar-width:none;
+      margin:0 -12px;padding:2px 12px 8px;}
     .ms-scroll::-webkit-scrollbar{display:none;}
-    .ms-card-wrap{
-      flex-shrink:0;
-      width:76vw;max-width:300px;min-width:220px;
-      scroll-snap-align:start;
-    }
-    .ms-card{
-      background:var(--card);border-radius:16px;
-      border:1px solid var(--border);
-      box-shadow:0 1px 3px rgba(0,0,0,.04);
-      padding:14px;height:100%;
-    }
-    .ms-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
-    .ms-left{}
-    .ms-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.3;}
+    .ms-card-wrap{flex-shrink:0;width:74vw;max-width:290px;min-width:210px;scroll-snap-align:start;}
+    .ms-card{background:var(--card);border-radius:14px;border:1px solid var(--border);
+      box-shadow:0 1px 3px rgba(0,0,0,.04);padding:13px;height:100%;}
+    .ms-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;}
+    .ms-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;line-height:1.3;}
     .ms-deadline{font-size:11px;color:var(--muted);}
-    .ms-pill{
-      font-size:10px;font-weight:700;border-radius:20px;padding:3px 8px;
-      white-space:nowrap;margin-left:6px;flex-shrink:0;
-    }
+    .ms-pill{font-size:10px;font-weight:700;border-radius:20px;padding:3px 8px;white-space:nowrap;margin-left:6px;flex-shrink:0;}
     .pill-ok{background:var(--green-lt);color:var(--green);}
     .pill-warn{background:var(--amber-lt);color:var(--amber);}
     .pill-ng{background:var(--red-lt);color:var(--red);}
-    .ms-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px;}
-    .ms-num{background:var(--bg);border-radius:8px;padding:7px 4px;text-align:center;}
+    .ms-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:9px;}
+    .ms-num{background:var(--bg);border-radius:7px;padding:6px 3px;text-align:center;}
     .ms-num-lbl{font-size:9px;color:var(--muted);margin-bottom:2px;font-weight:500;}
     .ms-num-val{font-size:12px;font-weight:800;}
     .ms-num-val.pos{color:var(--green);} .ms-num-val.neg{color:var(--red);}
-    .prog-wrap{}
-    .prog-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
-    .prog-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+    .prog-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+    .prog-fill{height:100%;border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);}
     .fill-ok{background:var(--green);} .fill-warn{background:var(--amber);} .fill-ng{background:var(--red);}
-    .fill-accent{background:var(--accent);}
-    .prog-foot{display:flex;justify-content:space-between;margin-top:4px;}
+    .prog-foot{display:flex;justify-content:space-between;margin-top:3px;}
     .prog-pct{font-size:10px;color:var(--muted);font-weight:600;}
-    .ms-del{background:none;border:none;cursor:pointer;color:var(--border);font-size:18px;padding:0;}
-    .ms-del:active{color:var(--red);}
+    .ms-del{background:none;border:none;cursor:pointer;color:var(--border);font-size:17px;padding:0;}
 
-    /* ── CATEGORY HEADER ── */
-    .cat-hdr{
-      background:var(--bg);padding:7px 16px;
-      font-size:11px;font-weight:700;color:var(--muted);
-      display:flex;justify-content:space-between;letter-spacing:.03em;
-      border-bottom:1px solid var(--border);
-    }
+    /* ── CHARTS ── */
+    .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+    .chart-wrap{background:var(--card);border-radius:14px;border:1px solid var(--border);
+      padding:10px 8px 8px;min-width:0;}
+    .chart-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.05em;margin-bottom:6px;}
+    .chart-canvas-wrap{position:relative;height:150px;}
+    .chart-empty{font-size:11px;color:var(--muted);text-align:center;
+      padding:40px 0;line-height:1.5;}
+
+    /* ── HISTORY ── */
+    .cat-hdr{background:var(--bg);padding:6px 14px;font-size:11px;font-weight:700;
+      color:var(--muted);display:flex;justify-content:space-between;
+      letter-spacing:.03em;border-bottom:1px solid var(--border);}
     .cat-sub{font-size:12px;font-weight:700;color:var(--text);}
-
-    /* ── HISTORY ROW ── */
-    .hist-row{
-      display:flex;align-items:center;
-      padding:11px 16px;border-bottom:1px solid var(--border);
-    }
+    .hist-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);}
     .hist-row:last-child{border-bottom:none;}
-    .hist-dot{width:3px;height:34px;border-radius:2px;margin-right:12px;flex-shrink:0;}
-    .d-takky{background:#9333EA;}
-    .d-nin{background:var(--accent);}
-    .d-ami{background:#DB2777;}
+    .hist-dot{width:3px;height:32px;border-radius:2px;margin-right:11px;flex-shrink:0;}
+    .d-takky{background:var(--c1);} .d-nin{background:var(--c-contrib);} .d-ami{background:#e87ba4;}
     .d-withdraw{background:var(--amber);}
     .hist-body{flex:1;min-width:0;}
     .hist-top{display:flex;justify-content:space-between;align-items:center;}
     .hist-label{font-size:13px;font-weight:500;color:var(--text);
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;}
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;}
     .hist-amt-pos{font-size:14px;font-weight:800;color:var(--green);white-space:nowrap;}
     .hist-amt-neg{font-size:14px;font-weight:800;color:var(--red);white-space:nowrap;}
-    .hist-date{font-size:11px;color:var(--muted);margin-top:2px;}
-    .row-del{background:none;border:none;color:var(--border);cursor:pointer;padding:2px 0 2px 8px;font-size:17px;flex-shrink:0;}
-    .row-del:active{color:var(--red);}
+    .hist-date{font-size:11px;color:var(--muted);margin-top:1px;}
+    .row-del{background:none;border:none;color:var(--border);cursor:pointer;padding:2px 0 2px 8px;font-size:16px;flex-shrink:0;}
 
     /* ── BALANCE HISTORY ── */
     .bal-row{display:flex;justify-content:space-between;align-items:center;
-      padding:11px 16px;border-bottom:1px solid var(--border);}
+      padding:10px 14px;border-bottom:1px solid var(--border);}
     .bal-row:last-child{border-bottom:none;}
-    .bal-info{} .bal-date{font-size:11px;color:var(--muted);}
-    .bal-memo{font-size:13px;font-weight:500;color:var(--text);}
-    .bal-right{display:flex;align-items:center;gap:6px;}
+    .bal-ym{font-size:13px;font-weight:600;color:var(--text);}
     .bal-val{font-size:15px;font-weight:800;color:var(--text);}
-    .bal-del{background:none;border:none;color:var(--border);cursor:pointer;font-size:17px;}
-    .bal-del:active{color:var(--red);}
+    .bal-right{display:flex;align-items:center;gap:6px;}
+    .bal-del{background:none;border:none;color:var(--border);cursor:pointer;font-size:16px;}
 
     /* ── FORMS ── */
-    .form-wrap{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:18px 16px;}
-    .form-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:18px;}
-    .fgrp{margin-bottom:14px;}
+    .form-wrap{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:16px 14px;}
+    .form-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:16px;}
+    .fgrp{margin-bottom:13px;}
     .flbl{display:block;font-size:11px;font-weight:700;color:var(--muted);
-      text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
-    .finput,.fselect{
-      width:100%;padding:12px 14px;
-      border:1.5px solid var(--border);border-radius:10px;
-      font-size:16px;color:var(--text);background:#fff;
-      outline:none;transition:border-color .2s;-webkit-appearance:none;
-      font-family:inherit;
-    }
+      text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+    .finput,.fselect{width:100%;padding:11px 13px;border:1.5px solid var(--border);
+      border-radius:10px;font-size:16px;color:var(--text);background:#fff;
+      outline:none;transition:border-color .2s;-webkit-appearance:none;font-family:inherit;}
     .finput:focus,.fselect:focus{border-color:var(--accent);}
-    .btn-submit{
-      width:100%;padding:14px;background:var(--accent);color:#fff;
-      border:none;border-radius:12px;font-size:16px;font-weight:700;
-      cursor:pointer;margin-top:6px;letter-spacing:.02em;
-      transition:background .15s;
-    }
-    .btn-submit:active{background:#B84E2E;}
+    .btn-submit{width:100%;padding:14px;background:var(--accent);color:#fff;
+      border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:5px;}
     .btn-submit.red{background:var(--red);}
-    .btn-submit.red:active{background:#A0311A;}
 
     /* ── MODAL ── */
-    .modal-overlay{display:none;position:fixed;inset:0;
-      background:rgba(0,0,0,.4);z-index:300;align-items:flex-end;
-      backdrop-filter:blur(2px);}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);
+      z-index:300;align-items:flex-end;backdrop-filter:blur(2px);}
     .modal-overlay.open{display:flex;}
-    .modal-sheet{
-      background:var(--card);border-radius:22px 22px 0 0;
-      padding:14px 16px 44px;width:100%;max-height:92vh;overflow-y:auto;
-    }
-    .modal-handle{width:32px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;}
-    .modal-title{font-size:17px;font-weight:800;margin-bottom:18px;text-align:center;}
+    .modal-sheet{background:var(--card);border-radius:22px 22px 0 0;
+      padding:14px 14px 44px;width:100%;max-height:92vh;overflow-y:auto;}
+    .modal-handle{width:32px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+    .modal-title{font-size:16px;font-weight:800;margin-bottom:16px;text-align:center;}
 
-    /* ── EMPTY ── */
-    .empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px;}
-
-    /* ── INFO BANNER ── */
-    .banner{
-      border-radius:12px;padding:13px 14px;margin-bottom:14px;
-      font-size:12px;line-height:1.7;
-    }
+    /* ── MISC ── */
+    .empty{text-align:center;padding:26px 16px;color:var(--muted);font-size:13px;}
+    .banner{border-radius:12px;padding:12px 13px;margin-bottom:12px;font-size:12px;line-height:1.7;}
     .banner-amber{background:var(--amber-lt);color:#78450A;border:1px solid #F2D59A;}
     .banner-blue{background:#EEF4FF;color:#1E40AF;border:1px solid #BFDBFE;}
     .banner-green{background:var(--green-lt);color:#145C38;border:1px solid #86EFAC;}
-    .banner strong{display:block;font-size:13px;font-weight:700;margin-bottom:3px;}
+    .banner strong{display:block;font-size:13px;font-weight:700;margin-bottom:2px;}
     .banner a{color:inherit;font-weight:700;}
-
-    /* ── STEP LIST ── */
     .steps{margin:0;padding:0;list-style:none;}
-    .step{
-      display:flex;gap:11px;padding:10px 0;
-      border-bottom:1px solid var(--border);
-    }
+    .step{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
     .step:last-child{border-bottom:none;}
-    .step-num{
-      width:24px;height:24px;border-radius:50%;background:var(--accent);
-      color:#fff;font-size:12px;font-weight:800;display:flex;
-      align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
-    }
+    .step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;
+      font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
     .step-body{flex:1;}
     .step-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
-    .step-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+    .step-desc{font-size:11px;color:var(--muted);line-height:1.6;}
     .step-desc a{color:var(--accent);font-weight:600;}
-
-    /* ── CONFIG INPUT ── */
-    textarea.finput{font-size:12px;font-family:'Menlo','Consolas',monospace;
-      line-height:1.5;resize:vertical;}
-
-    /* ── DIVIDER ── */
-    .divider{height:1px;background:var(--border);margin:16px 0;}
+    .divider{height:1px;background:var(--border);margin:14px 0;}
+    textarea.finput{font-size:12px;font-family:'Menlo','Consolas',monospace;line-height:1.5;resize:vertical;}
   </style>
 </head>
 <body>
 
-<!-- ════ STICKY HEADER ════ -->
+<!-- ═══ HEADER ═══ -->
 <header class="hdr">
   <div class="hdr-row1">
     <span class="hdr-logo">投資管理</span>
     <span class="hdr-badge" id="sync-status">ローカル</span>
   </div>
-  <div class="hdr-stats">
+  <div class="hdr-grid">
     <div class="hdr-stat">
       <div class="hdr-lbl">口座残高（楽天証券）</div>
       <div class="hdr-val" id="hdr-balance">¥0</div>
@@ -284,12 +204,20 @@
       <div class="hdr-val" id="hdr-net">¥0</div>
       <div class="hdr-sub" id="hdr-net-sub" style="color:rgba(255,255,255,.5);">出資¥0 ー 引出¥0</div>
     </div>
+    <div class="hdr-stat sm">
+      <div class="hdr-lbl">達生お祝い金合計</div>
+      <div class="hdr-val sm" id="hdr-celebration">¥0</div>
+    </div>
+    <div class="hdr-stat sm">
+      <div class="hdr-lbl">引き出し金合計</div>
+      <div class="hdr-val sm" id="hdr-withdraw-total">¥0</div>
+    </div>
   </div>
 </header>
 
-<!-- ════ PAGE: HOME ════ -->
+<!-- ═══ HOME ═══ -->
 <div id="pg-home" class="page active">
-
+  <!-- Milestones -->
   <div class="sec">
     <div class="sec-hdr">
       <span class="sec-title">マイルストーン</span>
@@ -298,18 +226,52 @@
     <div id="ms-list"><div class="empty">マイルストーンを追加してください</div></div>
   </div>
 
+  <!-- Charts -->
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-title">グラフ</span></div>
+    <div class="charts-row">
+      <div class="chart-wrap">
+        <div class="chart-title">入金推移</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chart-contrib"></canvas>
+          <div class="chart-empty" id="chart-contrib-empty" style="display:none;">データなし</div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">残高推移</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chart-balance"></canvas>
+          <div class="chart-empty" id="chart-balance-empty" style="display:none;">データなし</div>
+        </div>
+      </div>
+    </div>
+    <!-- Legend -->
+    <div id="chart-legend" style="display:none;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:8px 12px;">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:10px;color:var(--muted);">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c1);margin-right:3px;"></span>達生お祝い金</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c-contrib);margin-right:3px;"></span>にん出資</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e87ba4;margin-right:3px;"></span>あみ出資</span>
+        <span style="margin-left:6px;"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c-contrib);margin-right:3px;"></span>純出資</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c-gain);margin-right:3px;"></span>収益</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--c-loss);margin-right:3px;"></span>損失</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contribution History -->
   <div class="sec">
     <div class="sec-hdr"><span class="sec-title">出資履歴</span></div>
     <div class="card" id="contrib-hist"><div class="empty">出資履歴がありません</div></div>
   </div>
 
+  <!-- Withdrawal History -->
   <div class="sec">
     <div class="sec-hdr"><span class="sec-title">引き出し履歴</span></div>
     <div class="card" id="withdraw-hist"><div class="empty">引き出し履歴がありません</div></div>
   </div>
 </div>
 
-<!-- ════ PAGE: CONTRIBUTE ════ -->
+<!-- ═══ CONTRIBUTE ═══ -->
 <div id="pg-contribute" class="page">
   <div class="form-wrap">
     <div class="form-title">出資を記録</div>
@@ -337,7 +299,7 @@
   </div>
 </div>
 
-<!-- ════ PAGE: WITHDRAW ════ -->
+<!-- ═══ WITHDRAW ═══ -->
 <div id="pg-withdraw" class="page">
   <div class="form-wrap">
     <div class="form-title">引き出しを記録</div>
@@ -361,107 +323,86 @@
   </div>
 </div>
 
-<!-- ════ PAGE: SETTINGS ════ -->
-<div id="pg-settings" class="page">
-
-  <!-- Firebase status banner -->
-  <div class="banner banner-amber" id="firebase-banner">
-    <strong>⚠️ 現在はこのデバイスのみ保存</strong>
-    にんとあみで共有するにはFirebaseの設定が必要です。
-    下の「Firebase設定」セクションを参照してください。
-  </div>
-  <div class="banner banner-green" id="firebase-ok-banner" style="display:none;">
-    <strong>✓ Firebase接続済み</strong>
-    データはリアルタイムで同期されています。
-  </div>
-
-  <!-- Balance Update -->
-  <div class="sec">
-    <div class="sec-hdr"><span class="sec-title">口座残高を更新</span></div>
-    <div class="form-wrap">
-      <div class="fgrp">
-        <label class="flbl">日付</label>
-        <input type="date" id="b-date" class="finput">
-      </div>
-      <div class="fgrp">
-        <label class="flbl">楽天証券口座残高（円）</label>
-        <input type="number" id="b-amount" class="finput" placeholder="1500000" inputmode="numeric">
-      </div>
-      <div class="fgrp">
-        <label class="flbl">メモ（任意）</label>
-        <input type="text" id="b-memo" class="finput" placeholder="例：6月末確認">
-      </div>
-      <button class="btn-submit" onclick="submitBalance()">残高を更新</button>
+<!-- ═══ BALANCE ═══ -->
+<div id="pg-balance" class="page">
+  <div class="form-wrap" style="margin-bottom:16px;">
+    <div class="form-title">証券口座残高入力</div>
+    <div class="fgrp">
+      <label class="flbl">年月</label>
+      <input type="month" id="b-month" class="finput">
     </div>
+    <div class="fgrp">
+      <label class="flbl">残高（円）</label>
+      <input type="number" id="b-amount" class="finput" placeholder="1500000" inputmode="numeric">
+    </div>
+    <button class="btn-submit" onclick="submitBalance()">記録する</button>
   </div>
 
-  <!-- Balance History -->
   <div class="sec">
-    <div class="sec-hdr"><span class="sec-title">残高更新履歴</span></div>
+    <div class="sec-hdr"><span class="sec-title">残高履歴</span></div>
     <div class="card" id="bal-hist"><div class="empty">残高履歴がありません</div></div>
   </div>
+</div>
 
-  <div class="divider"></div>
+<!-- ═══ SETTINGS ═══ -->
+<div id="pg-settings" class="page">
+  <div class="banner banner-amber" id="firebase-banner">
+    <strong>⚠️ 現在はこのデバイスのみ保存</strong>
+    Firebaseを設定するとデバイス間でデータが共有されます。
+  </div>
+  <div class="banner banner-green" id="firebase-ok-banner" style="display:none;">
+    <strong>✓ Firebase接続済み</strong>データはリアルタイムで同期されています。
+  </div>
 
-  <!-- Firebase Setup Guide -->
   <div class="sec">
-    <div class="sec-hdr"><span class="sec-title">Firebase設定（データ共有）</span></div>
-
-    <div class="banner banner-blue" style="margin-bottom:12px;">
-      <strong>Firebase は完全無料で使えます</strong>
-      Googleが提供するデータベースサービス。家族での利用レベルでは料金は一切発生しません（無料枠：1GB・月10GBまで）。
+    <div class="sec-hdr"><span class="sec-title">Firebase設定</span></div>
+    <div class="banner banner-blue">
+      <strong>Firebase は完全無料</strong>
+      家族利用レベルでは料金は一切発生しません（1GB・月10GBまで無料）。
     </div>
-
-    <div class="form-wrap" style="margin-bottom:12px;">
-      <div class="form-title" style="font-size:15px;margin-bottom:14px;">設定手順</div>
+    <div class="form-wrap" style="margin-bottom:10px;">
       <ol class="steps">
         <li class="step">
           <div class="step-num">1</div>
           <div class="step-body">
-            <div class="step-title">Googleアカウントでサインイン</div>
-            <div class="step-desc">
-              <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>
-              にアクセスし、Googleアカウントでログイン
-            </div>
+            <div class="step-title">Firebase Consoleにアクセス</div>
+            <div class="step-desc"><a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> でGoogleアカウントでログイン</div>
           </div>
         </li>
         <li class="step">
           <div class="step-num">2</div>
           <div class="step-body">
             <div class="step-title">プロジェクトを作成</div>
-            <div class="step-desc">「プロジェクトを追加」→ 名前を入力（例：投資管理）→ Googleアナリティクスはオフでも可 → 「プロジェクトを作成」</div>
+            <div class="step-desc">「プロジェクトを追加」→ 名前入力 → 作成</div>
           </div>
         </li>
         <li class="step">
           <div class="step-num">3</div>
           <div class="step-body">
-            <div class="step-title">ウェブアプリを追加</div>
-            <div class="step-desc">プロジェクト画面の「&lt;/&gt;」ボタン → ニックネームを入力 → 「アプリを登録」→ 表示された <strong>firebaseConfig の { } 全体</strong> をコピー</div>
+            <div class="step-title">ウェブアプリを追加 → configをコピー</div>
+            <div class="step-desc">「&lt;/&gt;」ボタン → ニックネーム入力 → 登録 → firebaseConfigをコピー</div>
           </div>
         </li>
         <li class="step">
           <div class="step-num">4</div>
           <div class="step-body">
-            <div class="step-title">Realtime Database を作成</div>
-            <div class="step-desc">左メニュー「構築」→「Realtime Database」→「データベースを作成」→ ロケーションは「asia-southeast1」→「テストモードで開始」→「有効にする」</div>
+            <div class="step-title">Realtime Databaseを作成</div>
+            <div class="step-desc">左メニュー「Realtime Database」→「データベースを作成」→「テストモード」→ 有効化</div>
           </div>
         </li>
         <li class="step">
           <div class="step-num">5</div>
           <div class="step-body">
-            <div class="step-title">APIキーだけ下のフォームに入力して保存</div>
-            <div class="step-desc">Firebase Console →「設定（⚙）」→「プロジェクトの設定」→「全般」→「マイアプリ」→ <strong>apiKey</strong> の値をコピーして下に貼り付け</div>
+            <div class="step-title">apiKeyだけ入力して保存</div>
+            <div class="step-desc">「設定（⚙）」→「プロジェクトの設定」→「マイアプリ」→「Config」→ apiKeyをコピー</div>
           </div>
         </li>
       </ol>
     </div>
-
     <div class="form-wrap">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-        以下の項目はすでに入力済みです。<strong>apiKey だけ</strong>入力してください。
-      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">他の項目は入力済みです。<strong style="color:var(--text);">apiKeyだけ</strong>入力してください。</div>
       <div class="fgrp">
-        <label class="flbl">apiKey（Firebase Console → プロジェクトの設定 → マイアプリ）</label>
+        <label class="flbl">apiKey</label>
         <input type="text" id="fb-apikey" class="finput" placeholder="AIzaSy...">
       </div>
       <div class="fgrp">
@@ -490,13 +431,13 @@
       </div>
       <button class="btn-submit" onclick="saveFirebaseConfig()">設定を保存して接続</button>
       <div id="fb-reset-wrap" style="display:none;margin-top:10px;">
-        <button class="btn-submit red" onclick="resetFirebaseConfig()">Firebase設定をリセット（ローカルモードに戻す）</button>
+        <button class="btn-submit red" onclick="resetFirebaseConfig()">Firebase設定をリセット</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════ BOTTOM NAV ════ -->
+<!-- ═══ BOTTOM NAV ═══ -->
 <nav class="bot-nav">
   <button class="nav-btn active" onclick="showPage('home',this)">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -510,13 +451,17 @@
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg>
     引き出し
   </button>
+  <button class="nav-btn" onclick="showPage('balance',this)">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+    残高
+  </button>
   <button class="nav-btn" onclick="showPage('settings',this)">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4,2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24,0-.43.17-.47.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-.22-.08-.47,0-.59.22L2.74,8.87c-.12.22-.08.47.12.61l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s.02.64.07.94l-2.03,1.58c-.18.14-.23.41-.12.61l1.92,3.32c.12.22.37.29.59.22l2.39-.96c.5.38,1.03.7,1.62.94l.36,2.54c.05.24.24.41.48.41h3.84c.24,0,.44-.17.47-.41l.36-2.54c.59-.24,1.13-.56,1.62-.94l2.39.96c.22.08.47,0,.59-.22l1.92-3.32c.12-.22.07-.47-.12-.61L19.14,12.94zM12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6,3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
     設定
   </button>
 </nav>
 
-<!-- ════ MODAL: ADD MILESTONE ════ -->
+<!-- ═══ MODAL: MILESTONE ═══ -->
 <div class="modal-overlay" id="modal-ms" onclick="closeOnBg(event,'modal-ms')">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -528,9 +473,8 @@
     <div class="fgrp">
       <label class="flbl">追加目標金額（円）</label>
       <input type="number" id="ms-amount" class="finput" placeholder="15000000" inputmode="numeric">
-      <div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5;">
-        前のマイルストーンに上乗せする金額を入力してください。<br>
-        例）1つ目¥1,500万・2つ目¥500万 → 2つ目までに合計¥2,000万必要
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;">
+        前のマイルストーンに上乗せする額を入力（例：1つ目¥1500万・2つ目¥500万 → 合計¥2000万必要）
       </div>
     </div>
     <div class="fgrp">
@@ -543,33 +487,28 @@
 
 <script>
 // ═══════════════════════════════════════
-//  STORAGE & DATA
+//  DATA
 // ═══════════════════════════════════════
-const STORE_KEY = 'invest_v2';
-let useFirebase = false;
-let fbDB = null;
-let data = { contributions:{}, withdrawals:{}, balances:{}, milestones:{} };
+const STORE_KEY='invest_v2';
+let useFirebase=false, fbDB=null;
+let data={contributions:{},withdrawals:{},balances:{},milestones:{}};
 
-function loadLocal(){
-  try{ const r=localStorage.getItem(STORE_KEY); if(r) data=JSON.parse(r); }catch(e){}
-}
-function saveLocal(){ localStorage.setItem(STORE_KEY,JSON.stringify(data)); }
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function loadLocal(){try{const r=localStorage.getItem(STORE_KEY);if(r)data=JSON.parse(r);}catch(e){}}
+function saveLocal(){localStorage.setItem(STORE_KEY,JSON.stringify(data));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 
-async function dbSet(path, id, val){
-  if(!data[path]) data[path]={};
-  data[path][id]=val;
-  saveLocal();
-  if(useFirebase && fbDB){
-    const {ref,set}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+async function dbSet(path,id,val){
+  if(!data[path])data[path]={};
+  data[path][id]=val;saveLocal();
+  if(useFirebase&&fbDB){
+    const{ref,set}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
     await set(ref(fbDB,`${path}/${id}`),val);
   }
 }
-async function dbDel(path, id){
-  if(data[path]) delete data[path][id];
-  saveLocal();
-  if(useFirebase && fbDB){
-    const {ref,remove}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+async function dbDel(path,id){
+  if(data[path])delete data[path][id];saveLocal();
+  if(useFirebase&&fbDB){
+    const{ref,remove}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
     await remove(ref(fbDB,`${path}/${id}`));
   }
 }
@@ -583,95 +522,76 @@ function stats(){
   const bs=Object.values(data.balances||{});
   const tc=cs.reduce((s,c)=>s+(c.amount||0),0);
   const tw=ws.reduce((s,w)=>s+(w.amount||0),0);
+  const cel=cs.filter(c=>c.category==='タッキーちゃんのお祝い金').reduce((s,c)=>s+c.amount,0);
   const net=tc-tw;
   const lb=bs.sort((a,b)=>b.createdAt-a.createdAt)[0];
   const bal=lb?lb.balance:0;
-  return{tc,tw,net,bal,gain:bal-net};
+  return{tc,tw,cel,net,bal,gain:bal-net};
 }
-
 function milestones(){
-  const{bal}=stats();
-  let cum=0;
+  const{bal}=stats();let cum=0;
   return Object.values(data.milestones||{})
     .sort((a,b)=>new Date(a.deadline)-new Date(b.deadline))
-    .map(ms=>{
-      cum+=ms.amount;
-      const short=cum-bal;
-      const pct=cum>0?Math.min(100,(bal/cum)*100):0;
+    .map(ms=>{cum+=ms.amount;
+      const short=cum-bal,pct=cum>0?Math.min(100,(bal/cum)*100):0;
       const days=Math.ceil((new Date(ms.deadline)-new Date())/864e5);
-      return{...ms,cum,short,pct,days};
-    });
+      return{...ms,cum,short,pct,days};});
 }
 
 // ═══════════════════════════════════════
 //  FORMAT
 // ═══════════════════════════════════════
 const fm=n=>'¥'+Math.abs(n).toLocaleString('ja-JP');
-function fd(s){ if(!s)return''; const[y,m,d]=s.split('-'); return`${y}/${+m}/${+d}`; }
-function esc(s){ return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''; }
-function today(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+const fmS=n=>{const a=Math.abs(n);return a>=10000000?(a/10000000).toFixed(1)+'千万':a>=1000000?(a/1000000).toFixed(1)+'百万':a>=10000?(a/10000).toFixed(0)+'万':'¥'+a.toLocaleString();};
+function fd(s){if(!s)return'';const[y,m,d]=s.split('-');return`${y}/${+m}/${+d}`;}
+function fdYM(s){if(!s)return'';const[y,m]=s.slice(0,7).split('-');return`${y}年${+m}月`;}
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function thisMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 
 // ═══════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════
-function renderAll(){ renderHdr(); renderMS(); renderContrib(); renderWithdraw(); renderBal(); }
+function renderAll(){renderHdr();renderMS();renderContrib();renderWithdraw();renderBal();renderCharts();}
 
 function renderHdr(){
-  const{tc,tw,net,bal,gain}=stats();
+  const{tc,tw,cel,net,bal,gain}=stats();
   document.getElementById('hdr-balance').textContent=fm(bal);
   const ge=document.getElementById('hdr-gain');
   ge.textContent=(gain>=0?'収益 +':'収益 ')+fm(gain);
   ge.className='hdr-sub '+(gain>0?'pos':gain<0?'neg':'neu');
   document.getElementById('hdr-net').textContent=fm(net);
   document.getElementById('hdr-net-sub').textContent=`出資${fm(tc)} ー 引出${fm(tw)}`;
+  document.getElementById('hdr-celebration').textContent=fm(cel);
+  document.getElementById('hdr-withdraw-total').textContent=fm(tw);
 }
 
 function renderMS(){
   const list=milestones();
   const el=document.getElementById('ms-list');
-  if(!list.length){ el.innerHTML='<div class="empty">マイルストーンがありません</div>'; return; }
-  el.innerHTML=`<div class="ms-scroll">`+list.map(ms=>{
-    const ok=ms.short<=0;
-    const warn=!ok&&ms.pct>=60;
-    const cls=ok?'pill-ok':warn?'pill-warn':'pill-ng';
-    const label=ok?'達成！':warn?'進行中':'不足';
-    const fillCls=ok?'fill-ok':warn?'fill-warn':'fill-ng';
-    return`<div class="ms-card-wrap">
-      <div class="ms-card">
-        <div class="ms-top">
-          <div class="ms-left">
-            <div class="ms-name">${esc(ms.purpose)}</div>
-            <div class="ms-deadline">期限 ${fd(ms.deadline)}（残${ms.days}日）</div>
-          </div>
-          <div style="display:flex;align-items:center;">
-            <span class="ms-pill ${cls}">${label}</span>
-            <button class="ms-del" onclick="delMS('${ms.id}')">✕</button>
-          </div>
-        </div>
-        <div class="ms-nums">
-          <div class="ms-num">
-            <div class="ms-num-lbl">追加目標</div>
-            <div class="ms-num-val">${fm(ms.amount)}</div>
-          </div>
-          <div class="ms-num">
-            <div class="ms-num-lbl">累計目標</div>
-            <div class="ms-num-val">${fm(ms.cum)}</div>
-          </div>
-          <div class="ms-num">
-            <div class="ms-num-lbl">${ok?'超過額':'不足額'}</div>
-            <div class="ms-num-val ${ok?'pos':'neg'}">${ok?'+':'-'}${fm(ms.short)}</div>
-          </div>
-        </div>
-        <div class="prog-wrap">
-          <div class="prog-bar"><div class="prog-fill ${fillCls}" style="width:${ms.pct.toFixed(1)}%"></div></div>
-          <div class="prog-foot">
-            <span class="prog-pct">${ms.pct.toFixed(1)}% 達成</span>
-            <span class="prog-pct">${fm(ms.cum)} 目標</span>
-          </div>
+  if(!list.length){el.innerHTML='<div class="empty">マイルストーンを追加してください</div>';return;}
+  el.innerHTML='<div class="ms-scroll">'+list.map(ms=>{
+    const ok=ms.short<=0,warn=!ok&&ms.pct>=60;
+    const pcls=ok?'pill-ok':warn?'pill-warn':'pill-ng';
+    const plbl=ok?'達成！':warn?'進行中':'不足';
+    const fcls=ok?'fill-ok':warn?'fill-warn':'fill-ng';
+    return`<div class="ms-card-wrap"><div class="ms-card">
+      <div class="ms-top">
+        <div><div class="ms-name">${esc(ms.purpose)}</div><div class="ms-deadline">期限 ${fd(ms.deadline)}（残${ms.days}日）</div></div>
+        <div style="display:flex;align-items:center;">
+          <span class="ms-pill ${pcls}">${plbl}</span>
+          <button class="ms-del" onclick="delMS('${ms.id}')">✕</button>
         </div>
       </div>
-    </div>`;
-  }).join('')+`</div>`;
+      <div class="ms-nums">
+        <div class="ms-num"><div class="ms-num-lbl">追加目標</div><div class="ms-num-val">${fmS(ms.amount)}</div></div>
+        <div class="ms-num"><div class="ms-num-lbl">累計目標</div><div class="ms-num-val">${fmS(ms.cum)}</div></div>
+        <div class="ms-num"><div class="ms-num-lbl">${ok?'超過':'不足'}</div><div class="ms-num-val ${ok?'pos':'neg'}">${ok?'+':'-'}${fmS(ms.short)}</div></div>
+      </div>
+      <div class="prog-bar"><div class="prog-fill ${fcls}" style="width:${ms.pct.toFixed(1)}%"></div></div>
+      <div class="prog-foot"><span class="prog-pct">${ms.pct.toFixed(1)}%</span><span class="prog-pct">${fmS(ms.cum)}</span></div>
+    </div></div>`;
+  }).join('')+'</div>';
 }
 
 const CAT_ORDER=['タッキーちゃんのお祝い金','にんの出資','あみの出資'];
@@ -680,29 +600,19 @@ const CAT_DOT={'タッキーちゃんのお祝い金':'d-takky','にんの出資
 function renderContrib(){
   const all=Object.values(data.contributions||{});
   const el=document.getElementById('contrib-hist');
-  if(!all.length){ el.innerHTML='<div class="empty">出資履歴がありません</div>'; return; }
-  const grouped={};
-  CAT_ORDER.forEach(c=>{grouped[c]=[];});
-  all.forEach(c=>{ if(grouped[c.category]) grouped[c.category].push(c); });
-  CAT_ORDER.forEach(c=>{ grouped[c].sort((a,b)=>a.date.localeCompare(b.date)); });
+  if(!all.length){el.innerHTML='<div class="empty">出資履歴がありません</div>';return;}
+  const grouped={};CAT_ORDER.forEach(c=>{grouped[c]=[];});
+  all.forEach(c=>{if(grouped[c.category])grouped[c.category].push(c);});
+  CAT_ORDER.forEach(c=>{grouped[c].sort((a,b)=>a.date.localeCompare(b.date));});
   let html='';
   CAT_ORDER.forEach(cat=>{
-    const items=grouped[cat]; if(!items.length) return;
+    const items=grouped[cat];if(!items.length)return;
     const sub=items.reduce((s,c)=>s+c.amount,0);
     html+=`<div class="cat-hdr"><span>${cat}</span><span class="cat-sub">${fm(sub)}</span></div>`;
-    items.forEach(c=>{
-      html+=`<div class="hist-row">
-        <div class="hist-dot ${CAT_DOT[cat]||'d-nin'}"></div>
-        <div class="hist-body">
-          <div class="hist-top">
-            <span class="hist-label">${esc(c.detail)}</span>
-            <span class="hist-amt-pos">${fm(c.amount)}</span>
-          </div>
-          <div class="hist-date">${fd(c.date)}</div>
-        </div>
-        <button class="row-del" onclick="delContrib('${c.id}')">✕</button>
-      </div>`;
-    });
+    items.forEach(c=>{html+=`<div class="hist-row">
+      <div class="hist-dot ${CAT_DOT[cat]||'d-nin'}"></div>
+      <div class="hist-body"><div class="hist-top"><span class="hist-label">${esc(c.detail)}</span><span class="hist-amt-pos">${fm(c.amount)}</span></div><div class="hist-date">${fd(c.date)}</div></div>
+      <button class="row-del" onclick="delContrib('${c.id}')">✕</button></div>`;});
   });
   el.innerHTML=html;
 }
@@ -710,40 +620,108 @@ function renderContrib(){
 function renderWithdraw(){
   const all=Object.values(data.withdrawals||{}).sort((a,b)=>a.date.localeCompare(b.date));
   const el=document.getElementById('withdraw-hist');
-  if(!all.length){ el.innerHTML='<div class="empty">引き出し履歴がありません</div>'; return; }
-  el.innerHTML=all.map(w=>`
-    <div class="hist-row">
-      <div class="hist-dot d-withdraw"></div>
-      <div class="hist-body">
-        <div class="hist-top">
-          <span class="hist-label">${esc(w.purpose)}${w.detail?'：'+esc(w.detail):''}</span>
-          <span class="hist-amt-neg">-${fm(w.amount)}</span>
-        </div>
-        <div class="hist-date">${fd(w.date)}</div>
-      </div>
-      <button class="row-del" onclick="delWithdraw('${w.id}')">✕</button>
-    </div>`).join('');
+  if(!all.length){el.innerHTML='<div class="empty">引き出し履歴がありません</div>';return;}
+  el.innerHTML=all.map(w=>`<div class="hist-row">
+    <div class="hist-dot d-withdraw"></div>
+    <div class="hist-body"><div class="hist-top"><span class="hist-label">${esc(w.purpose)}${w.detail?'：'+esc(w.detail):''}</span><span class="hist-amt-neg">-${fm(w.amount)}</span></div><div class="hist-date">${fd(w.date)}</div></div>
+    <button class="row-del" onclick="delWithdraw('${w.id}')">✕</button></div>`).join('');
 }
 
 function renderBal(){
   const all=Object.values(data.balances||{}).sort((a,b)=>b.createdAt-a.createdAt);
   const el=document.getElementById('bal-hist');
-  if(!all.length){ el.innerHTML='<div class="empty">残高履歴がありません</div>'; return; }
-  el.innerHTML=all.map(b=>`
-    <div class="bal-row">
-      <div class="bal-info">
-        <div class="bal-date">${fd(b.date)}</div>
-        <div class="bal-memo">${b.memo?esc(b.memo):'楽天証券残高'}</div>
-      </div>
-      <div class="bal-right">
-        <span class="bal-val">${fm(b.balance)}</span>
-        <button class="bal-del" onclick="delBal('${b.id}')">✕</button>
-      </div>
+  if(!all.length){el.innerHTML='<div class="empty">残高履歴がありません</div>';return;}
+  el.innerHTML=all.map(b=>`<div class="bal-row">
+    <div class="bal-ym">${fdYM(b.date)}</div>
+    <div class="bal-right"><span class="bal-val">${fm(b.balance)}</span><button class="bal-del" onclick="delBal('${b.id}')">✕</button></div>
     </div>`).join('');
 }
 
 // ═══════════════════════════════════════
-//  SUBMIT HANDLERS
+//  CHARTS
+// ═══════════════════════════════════════
+let chart1=null,chart2=null;
+
+function chartOpts(stacked){
+  const yFmt=v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':v;
+  return{
+    responsive:true,maintainAspectRatio:false,animation:{duration:400},
+    plugins:{legend:{display:false},tooltip:{
+      bodyFont:{size:10},titleFont:{size:10},
+      callbacks:{label:ctx=>`${ctx.dataset.label}: ¥${Math.abs(ctx.parsed.y).toLocaleString('ja-JP')}`}
+    }},
+    scales:{
+      x:{stacked,grid:{display:false},border:{display:false},
+        ticks:{font:{size:9},maxRotation:0,color:'#8C8480'}},
+      y:{stacked,grid:{color:'#EAE5DC',lineWidth:1},border:{display:false},
+        ticks:{font:{size:9},color:'#8C8480',callback:yFmt}}
+    }
+  };
+}
+
+function getContribData(){
+  const all=Object.values(data.contributions||{});
+  if(!all.length)return null;
+  const months=[...new Set(all.map(c=>c.date.slice(0,7)))].sort();
+  const cats=['タッキーちゃんのお祝い金','にんの出資','あみの出資'];
+  const colors=['#2a78d6','#eb6834','#e87ba4'];
+  const labels=months.map(m=>{const[,mo]=m.split('-');return+mo+'月';});
+  return{labels,datasets:cats.map((cat,i)=>({
+    label:cat.replace('のお祝い金','').replace('の出資',''),
+    data:months.map(m=>all.filter(c=>c.date.slice(0,7)===m&&c.category===cat).reduce((s,c)=>s+c.amount,0)),
+    backgroundColor:colors[i],borderRadius:3,stack:'c',
+    borderWidth:1,borderColor:'rgba(255,255,255,.3)'
+  }))};
+}
+
+function getBalData(){
+  const bals=Object.values(data.balances||{}).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!bals.length)return null;
+  const cs=Object.values(data.contributions||{});
+  const ws=Object.values(data.withdrawals||{});
+  const labels=bals.map(b=>{const[,m]=b.date.slice(0,7).split('-');return+m+'月';});
+  const netArr=bals.map(b=>{
+    const ym=b.date.slice(0,7);
+    const tc=cs.filter(c=>c.date.slice(0,7)<=ym).reduce((s,c)=>s+c.amount,0);
+    const tw=ws.filter(w=>w.date.slice(0,7)<=ym).reduce((s,w)=>s+w.amount,0);
+    return tc-tw;
+  });
+  const balArr=bals.map(b=>b.balance);
+  return{labels,datasets:[
+    {type:'bar',label:'口座残高',data:balArr,
+      backgroundColor:balArr.map((b,i)=>b>=netArr[i]?'#1baf7a':'#d03b3b'),
+      borderRadius:3,borderWidth:1,borderColor:'rgba(255,255,255,.3)'},
+    {type:'line',label:'純出資額',data:netArr,
+      borderColor:'#eb6834',backgroundColor:'transparent',
+      borderWidth:2,pointRadius:2,pointBackgroundColor:'#eb6834',tension:0.3}
+  ]};
+}
+
+function renderCharts(){
+  if(typeof Chart==='undefined')return;
+  const d1=getContribData(),d2=getBalData();
+  const e1=document.getElementById('chart-contrib-empty');
+  const e2=document.getElementById('chart-balance-empty');
+  const legendEl=document.getElementById('chart-legend');
+
+  if(chart1){chart1.destroy();chart1=null;}
+  if(d1){
+    e1.style.display='none';
+    chart1=new Chart(document.getElementById('chart-contrib').getContext('2d'),
+      {type:'bar',data:d1,options:chartOpts(true)});
+    legendEl.style.display='block';
+  } else { e1.style.display='block'; }
+
+  if(chart2){chart2.destroy();chart2=null;}
+  if(d2){
+    e2.style.display='none';
+    chart2=new Chart(document.getElementById('chart-balance').getContext('2d'),
+      {type:'bar',data:d2,options:chartOpts(false)});
+  } else { e2.style.display='block'; }
+}
+
+// ═══════════════════════════════════════
+//  SUBMIT
 // ═══════════════════════════════════════
 async function submitContribution(){
   const date=document.getElementById('c-date').value;
@@ -755,8 +733,7 @@ async function submitContribution(){
   await dbSet('contributions',id,{id,date,category,detail,amount,createdAt:Date.now()});
   document.getElementById('c-detail').value='';
   document.getElementById('c-amount').value='';
-  renderAll();
-  alert('記録しました！');
+  renderAll();alert('記録しました！');
 }
 
 async function submitWithdrawal(){
@@ -770,21 +747,17 @@ async function submitWithdrawal(){
   document.getElementById('w-purpose').value='';
   document.getElementById('w-detail').value='';
   document.getElementById('w-amount').value='';
-  renderAll();
-  alert('記録しました！');
+  renderAll();alert('記録しました！');
 }
 
 async function submitBalance(){
-  const date=document.getElementById('b-date').value;
+  const month=document.getElementById('b-month').value;
   const balance=parseInt(document.getElementById('b-amount').value);
-  const memo=document.getElementById('b-memo').value.trim();
-  if(!date||isNaN(balance)||balance<0){alert('日付と残高を入力してください');return;}
+  if(!month||isNaN(balance)||balance<0){alert('年月と残高を入力してください');return;}
   const id=uid();
-  await dbSet('balances',id,{id,date,balance,memo,createdAt:Date.now()});
+  await dbSet('balances',id,{id,date:month,balance,createdAt:Date.now()});
   document.getElementById('b-amount').value='';
-  document.getElementById('b-memo').value='';
-  renderAll();
-  alert('残高を更新しました！');
+  renderAll();alert('記録しました！');
 }
 
 async function submitMilestone(){
@@ -804,101 +777,68 @@ async function submitMilestone(){
 // ═══════════════════════════════════════
 //  DELETE
 // ═══════════════════════════════════════
-async function delContrib(id){ if(confirm('この出資記録を削除しますか？')){ await dbDel('contributions',id); renderAll(); } }
-async function delWithdraw(id){ if(confirm('この引き出し記録を削除しますか？')){ await dbDel('withdrawals',id); renderAll(); } }
-async function delBal(id){ if(confirm('この残高記録を削除しますか？')){ await dbDel('balances',id); renderAll(); } }
-async function delMS(id){ if(confirm('このマイルストーンを削除しますか？')){ await dbDel('milestones',id); renderAll(); } }
+async function delContrib(id){if(confirm('削除しますか？')){await dbDel('contributions',id);renderAll();}}
+async function delWithdraw(id){if(confirm('削除しますか？')){await dbDel('withdrawals',id);renderAll();}}
+async function delBal(id){if(confirm('削除しますか？')){await dbDel('balances',id);renderAll();}}
+async function delMS(id){if(confirm('削除しますか？')){await dbDel('milestones',id);renderAll();}}
 
 // ═══════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════
-function showPage(name, btn){
+function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('pg-'+name).classList.add('active');
   btn.classList.add('active');
-  const t=today();
-  if(name==='contribute'&&!document.getElementById('c-date').value) document.getElementById('c-date').value=t;
-  if(name==='withdraw'&&!document.getElementById('w-date').value) document.getElementById('w-date').value=t;
-  if(name==='settings'&&!document.getElementById('b-date').value) document.getElementById('b-date').value=t;
+  const t=today(),m=thisMonth();
+  if(name==='contribute'&&!document.getElementById('c-date').value)document.getElementById('c-date').value=t;
+  if(name==='withdraw'&&!document.getElementById('w-date').value)document.getElementById('w-date').value=t;
+  if(name==='balance'&&!document.getElementById('b-month').value)document.getElementById('b-month').value=m;
+  if(name==='home')renderCharts();
 }
-function openModal(id){ document.getElementById(id).classList.add('open'); }
-function closeOnBg(e,id){ if(e.target.id===id) document.getElementById(id).classList.remove('open'); }
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeOnBg(e,id){if(e.target.id===id)document.getElementById(id).classList.remove('open');}
 
 // ═══════════════════════════════════════
-//  FIREBASE CONFIG
+//  FIREBASE
 // ═══════════════════════════════════════
 function saveFirebaseConfig(){
   const get=id=>document.getElementById(id).value.trim();
-  const apiKey=get('fb-apikey');
-  const authDomain=get('fb-authdomain');
-  const databaseURL=get('fb-dburl');
-  const projectId=get('fb-projectid');
-  const storageBucket=get('fb-bucket');
-  const messagingSenderId=get('fb-senderid');
-  const appId=get('fb-appid');
-  if(!apiKey){ alert('apiKey を入力してください'); return; }
-  if(!databaseURL){ alert('databaseURL を入力してください'); return; }
-  const cfg={apiKey,authDomain,databaseURL,projectId,storageBucket,messagingSenderId,appId};
+  const apiKey=get('fb-apikey'),databaseURL=get('fb-dburl');
+  if(!apiKey){alert('apiKey を入力してください');return;}
+  const cfg={apiKey,authDomain:get('fb-authdomain'),databaseURL,projectId:get('fb-projectid'),
+    storageBucket:get('fb-bucket'),messagingSenderId:get('fb-senderid'),appId:get('fb-appid')};
   localStorage.setItem('fb_config',JSON.stringify(cfg));
-  alert('設定を保存しました！接続します。');
-  location.reload();
+  alert('設定を保存しました！');location.reload();
 }
 function resetFirebaseConfig(){
-  if(confirm('Firebase設定をリセットしてローカルモードに戻しますか？（データは保持されます）')){
-    localStorage.removeItem('fb_config');
-    location.reload();
-  }
+  if(confirm('Firebase設定をリセットしますか？')){localStorage.removeItem('fb_config');location.reload();}
 }
 
 async function initFirebase(config){
   try{
     const{initializeApp}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const{getDatabase,ref,set,onValue}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
-    const app=initializeApp(config);
-    fbDB=getDatabase(app);
-    useFirebase=true;
+    const app=initializeApp(config);fbDB=getDatabase(app);useFirebase=true;
     document.getElementById('sync-status').textContent='同期中…';
-
     let firstLoad=true;
     onValue(ref(fbDB,'/'),(snap)=>{
       const v=snap.val();
       if(firstLoad){
         firstLoad=false;
         const fbHasData=v&&(v.contributions||v.withdrawals||v.balances||v.milestones);
-        const localCount=Object.keys(data.contributions||{}).length
-          +Object.keys(data.withdrawals||{}).length
-          +Object.keys(data.balances||{}).length
-          +Object.keys(data.milestones||{}).length;
-        if(!fbHasData&&localCount>0){
-          // ローカルデータをFirebaseに移行
-          set(ref(fbDB,'/'),data).catch(console.error);
-          document.getElementById('sync-status').textContent='移行中…';
-          return;
-        }
+        const localCount=Object.keys(data.contributions||{}).length+Object.keys(data.withdrawals||{}).length
+          +Object.keys(data.balances||{}).length+Object.keys(data.milestones||{}).length;
+        if(!fbHasData&&localCount>0){set(ref(fbDB,'/'),data).catch(console.error);return;}
       }
-      if(v){
-        data={
-          contributions:v.contributions||{},
-          withdrawals:v.withdrawals||{},
-          balances:v.balances||{},
-          milestones:v.milestones||{}
-        };
-        saveLocal();
-        renderAll();
-      }
+      if(v){data={contributions:v.contributions||{},withdrawals:v.withdrawals||{},
+        balances:v.balances||{},milestones:v.milestones||{}};saveLocal();renderAll();}
       document.getElementById('sync-status').textContent='同期済み ✓';
       document.getElementById('firebase-banner').style.display='none';
       document.getElementById('firebase-ok-banner').style.display='block';
       document.getElementById('fb-reset-wrap').style.display='block';
-    },(err)=>{
-      document.getElementById('sync-status').textContent='接続エラー';
-      console.error(err);
-    });
-  }catch(e){
-    document.getElementById('sync-status').textContent='接続失敗';
-    console.error(e);
-  }
+    },(err)=>{document.getElementById('sync-status').textContent='接続エラー';console.error(err);});
+  }catch(e){document.getElementById('sync-status').textContent='接続失敗';console.error(e);}
 }
 
 // ═══════════════════════════════════════
@@ -917,15 +857,11 @@ const DEFAULT_CONFIG={
 loadLocal();
 document.getElementById('c-date').value=today();
 renderAll();
-
-if(localStorage.getItem('fb_config')){
-  document.getElementById('fb-reset-wrap').style.display='block';
-}
-
+if(localStorage.getItem('fb_config'))document.getElementById('fb-reset-wrap').style.display='block';
 try{
   const saved=localStorage.getItem('fb_config');
   const fc=saved?JSON.parse(saved):DEFAULT_CONFIG;
-  if(fc&&fc.apiKey) initFirebase(fc);
+  if(fc&&fc.apiKey)initFirebase(fc);
 }catch(e){}
 </script>
 </body>
