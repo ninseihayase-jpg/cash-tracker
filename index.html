@@ -108,7 +108,12 @@
       padding:10px 8px 8px;min-width:0;}
     .chart-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
       letter-spacing:.05em;margin-bottom:6px;}
-    .chart-canvas-wrap{position:relative;height:150px;}
+    .chart-canvas-wrap{position:relative;height:260px;}
+    .chart-wrap{margin-bottom:8px;}
+    .chart-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:8px;}
+    .chart-tab{flex:1;border:none;background:none;border-radius:8px;padding:7px 0;font-size:12px;
+      font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;}
+    .chart-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12);}
     .chart-empty{font-size:11px;color:var(--muted);text-align:center;
       padding:40px 0;line-height:1.5;}
 
@@ -234,33 +239,31 @@
   <!-- Charts -->
   <div class="sec">
     <div class="sec-hdr"><span class="sec-title">グラフ</span></div>
-    <div class="charts-row">
-      <div class="chart-wrap">
-        <div class="chart-title">入金推移</div>
-        <div class="chart-canvas-wrap">
-          <canvas id="chart-contrib"></canvas>
-          <div class="chart-empty" id="chart-contrib-empty" style="display:none;">データなし</div>
-        </div>
+    <div class="chart-wrap">
+      <div class="chart-tabs">
+        <button class="chart-tab active" id="tab-balance" onclick="setChartTab('balance')">残高推移</button>
+        <button class="chart-tab" id="tab-contrib" onclick="setChartTab('contrib')">入金推移</button>
       </div>
-      <div class="chart-wrap">
-        <div class="chart-title">残高推移</div>
-        <div class="chart-canvas-wrap">
-          <canvas id="chart-balance"></canvas>
-          <div class="chart-empty" id="chart-balance-empty" style="display:none;">データなし</div>
-        </div>
+      <div class="chart-canvas-wrap" id="cw-balance">
+        <canvas id="chart-balance"></canvas>
+        <div class="chart-empty" id="chart-balance-empty" style="display:none;">データなし</div>
+      </div>
+      <div class="chart-canvas-wrap" id="cw-contrib" style="display:none;">
+        <canvas id="chart-contrib"></canvas>
+        <div class="chart-empty" id="chart-contrib-empty" style="display:none;">データなし</div>
       </div>
     </div>
     <!-- Legend -->
     <div id="chart-legend" style="display:none;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:8px 12px;">
       <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:10px;color:var(--muted);">
-        <span style="font-weight:600;color:var(--text);">入金：</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2a78d6;margin-right:3px;"></span>達生お祝い金</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>にん出資</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e87ba4;margin-right:3px;"></span>あみ出資</span>
-        <span style="margin-left:4px;font-weight:600;color:var(--text);">残高：</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B0ACAA;margin-right:3px;"></span>純出資額</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1baf7a;margin-right:3px;"></span>収益</span>
-        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d03b3b;margin-right:3px;"></span>損失</span>
+        <span class="lg-contrib" style="font-weight:600;color:var(--text);">入金：</span>
+        <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2a78d6;margin-right:3px;"></span>達生お祝い金</span>
+        <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>にん出資</span>
+        <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e87ba4;margin-right:3px;"></span>あみ出資</span>
+        <span class="lg-bal" style="margin-left:4px;font-weight:600;color:var(--text);">残高：</span>
+        <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B0ACAA;margin-right:3px;"></span>純出資額</span>
+        <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1baf7a;margin-right:3px;"></span>収益</span>
+        <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d03b3b;margin-right:3px;"></span>損失</span>
       </div>
     </div>
   </div>
@@ -554,11 +557,18 @@ function stats(){
   const tw=ws.reduce((s,w)=>s+(w.amount||0),0);
   const cel=cs.filter(c=>c.category==='タッキーちゃんのお祝い金').reduce((s,c)=>s+c.amount,0);
   const net=tc-tw;
-  // getBalByMonth()で月ごとに重複排除してから最新月を取得
+  // 口座残高 = 最新の手入力残高 − 残高入力より後に記録した引き出し
   const byMonth=getBalByMonth();
   const months=Object.keys(byMonth).sort();
-  const bal=months.length?byMonth[months[months.length-1]].balance:0;
+  const lb=months.length?byMonth[months[months.length-1]]:null;
+  const bal=lb?lb.balance-withdrawnAfter(lb):0;
+  // 投資収益 = 口座残高 + 引き出し合計 − 入金合計（引き出しだけでは増減しない）
   return{tc,tw,cel,net,bal,gain:bal-net};
+}
+function withdrawnAfter(entry){
+  const t=entry.updatedAt||entry.createdAt||0;
+  return Object.values(data.withdrawals||{})
+    .filter(w=>(w.createdAt||0)>t).reduce((s,w)=>s+(w.amount||0),0);
 }
 function milestones(){
   const{bal}=stats();let cum=0;
@@ -714,20 +724,32 @@ function renderBal(){
 //  CHARTS
 // ═══════════════════════════════════════
 let chart1=null,chart2=null;
+let chartTab='balance';
+
+function setChartTab(t){
+  chartTab=t;
+  document.getElementById('tab-balance').classList.toggle('active',t==='balance');
+  document.getElementById('tab-contrib').classList.toggle('active',t==='contrib');
+  document.getElementById('cw-balance').style.display=t==='balance'?'':'none';
+  document.getElementById('cw-contrib').style.display=t==='contrib'?'':'none';
+  renderCharts();
+}
 
 function chartOpts(stacked){
   const yFmt=v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':v;
   return{
     responsive:true,maintainAspectRatio:false,animation:{duration:400},
     plugins:{legend:{display:false},tooltip:{
-      bodyFont:{size:10},titleFont:{size:10},
-      callbacks:{label:ctx=>`${ctx.dataset.label}: ¥${Math.abs(ctx.parsed.y).toLocaleString('ja-JP')}`}
+      bodyFont:{size:11},titleFont:{size:11},
+      callbacks:{label:ctx=>{
+        const raw=ctx.dataset.raw?ctx.dataset.raw[ctx.dataIndex]:ctx.parsed.y;
+        return `${ctx.dataset.label}: ¥${Math.abs(raw).toLocaleString('ja-JP')}`;}}
     }},
     scales:{
       x:{stacked,grid:{display:false},border:{display:false},
-        ticks:{font:{size:9},maxRotation:0,color:'#8C8480'}},
+        ticks:{font:{size:10},maxRotation:0,color:'#8C8480'}},
       y:{stacked,grid:{color:'#EAE5DC',lineWidth:1},border:{display:false},
-        ticks:{font:{size:9},color:'#8C8480',callback:yFmt}}
+        ticks:{font:{size:10},color:'#8C8480',callback:yFmt}}
     }
   };
 }
@@ -754,31 +776,52 @@ function getContribData(){
   })};
 }
 
+// 縦軸の変換。マイルストーンが棒グラフよりずっと上にある場合、棒の上側を圧縮して全部収める
+function makeScale(maxBar,maxMs){
+  const T=Math.max(maxBar*1.15,1);
+  if(maxMs<=T*1.4)return{f:v=>v,inv:v=>v,max:Math.max(maxBar,maxMs)*1.08,T:null,compressed:false};
+  const k=(0.5*T)/(maxMs-T);
+  const f1=v=>v<=T?v:T+(v-T)*k;
+  const i1=d=>d<=T?d:T+(d-T)/k;
+  return{f:v=>v<0?-f1(-v):f1(v),inv:d=>d<0?-i1(-d):i1(d),max:f1(maxMs)*1.08,T,compressed:true};
+}
+
+function niceStep(x){
+  const e=Math.pow(10,Math.floor(Math.log10(x))),m=x/e;
+  return (m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10)*e;
+}
+
 function getBalData(){
   const byMonth=getBalByMonth();
   const sortedMonths=Object.keys(byMonth).sort();
   if(!sortedMonths.length)return null;
-  const bals=sortedMonths.map(m=>byMonth[m]);
   const cs=Object.values(data.contributions||{});
   const ws=Object.values(data.withdrawals||{});
   const labels=sortedMonths.map((m,i)=>{const[y,mo]=m.split('-');const py=i>0?sortedMonths[i-1].split('-')[0]:null;return py!==y?[`${+mo}月`,y]:`${+mo}月`;});
+  const last=sortedMonths.length-1;
+  // 最新月だけ、残高入力後に記録した引き出しを差し引く
+  const balArr=sortedMonths.map((m,i)=>byMonth[m].balance-(i===last?withdrawnAfter(byMonth[m]):0));
   const netArr=sortedMonths.map(ym=>{
     const tc=cs.filter(c=>c.date.slice(0,7)<=ym).reduce((s,c)=>s+c.amount,0);
     const tw=ws.filter(w=>w.date.slice(0,7)<=ym).reduce((s,w)=>s+w.amount,0);
     return tc-tw;
   });
-  // 収益 = 残高 - 純出資額（正=利益, 負=損失）
-  const gainArr=bals.map((b,i)=>b.balance-netArr[i]);
-  return{labels,datasets:[
-    {label:'純出資額',data:netArr,backgroundColor:'#B0ACAA',
+  // 収益 = 残高 − 純出資額（正=利益, 負=損失）
+  const gainArr=balArr.map((b,i)=>b-netArr[i]);
+  const msList=milestones();
+  const maxMs=msList.length?Math.max(...msList.map(m=>m.cum)):0;
+  const sc=makeScale(Math.max(...balArr,...netArr,1),maxMs);
+  const f=sc.f;
+  return{scale:sc,msList,labels,datasets:[
+    {label:'純出資額',data:netArr.map(v=>f(v)),raw:netArr,backgroundColor:'#B0ACAA',
       borderRadius:3,stack:'b',borderWidth:1,borderColor:'rgba(255,255,255,.3)'},
-    {label:'投資収益',data:gainArr,
+    {label:'投資収益',data:gainArr.map((g,i)=>f(netArr[i]+g)-f(netArr[i])),raw:gainArr,
       backgroundColor:gainArr.map(g=>g>=0?'#1baf7a':'#d03b3b'),
       borderRadius:3,stack:'b',borderWidth:1,borderColor:'rgba(255,255,255,.3)'}
   ]};
 }
 
-function makeMsPlugin(){
+function makeMsPlugin(sc){
   return{
     id:'ms-lines',
     afterDraw(chart){
@@ -786,7 +829,7 @@ function makeMsPlugin(){
       if(!msList.length)return;
       const{ctx,scales:{x,y}}=chart;
       msList.forEach(ms=>{
-        const py=y.getPixelForValue(ms.cum);
+        const py=y.getPixelForValue(sc.f(ms.cum));
         if(py<y.top-2||py>y.bottom+2)return;
         ctx.save();
         ctx.strokeStyle='rgba(212,96,58,.8)';
@@ -795,37 +838,77 @@ function makeMsPlugin(){
         ctx.beginPath();ctx.moveTo(x.left,py);ctx.lineTo(x.right,py);ctx.stroke();
         ctx.setLineDash([]);
         ctx.fillStyle='rgba(212,96,58,.95)';
-        ctx.font='bold 8px system-ui,-apple-system,sans-serif';
+        ctx.font='bold 9px system-ui,-apple-system,sans-serif';
         ctx.textAlign='right';ctx.textBaseline='bottom';
-        const lbl=ms.purpose.length>8?ms.purpose.slice(0,7)+'…':ms.purpose;
-        ctx.fillText(lbl,x.right,py-2);
+        const nm=ms.purpose.length>8?ms.purpose.slice(0,7)+'…':ms.purpose;
+        ctx.fillText(`${nm} ${fmS(ms.cum)}`,x.right,py-2);
         ctx.restore();
       });
+      // 圧縮区間の境目を示す
+      if(sc.compressed){
+        const py=y.getPixelForValue(sc.T);
+        ctx.save();
+        ctx.strokeStyle='rgba(140,132,128,.6)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(x.left,py);ctx.lineTo(x.left+12,py);ctx.stroke();
+        ctx.fillStyle='rgba(140,132,128,.9)';ctx.font='9px system-ui,sans-serif';
+        ctx.textAlign='left';ctx.textBaseline='bottom';
+        ctx.fillText('≈ ここから上は圧縮',x.left+16,py-1);
+        ctx.restore();
+      }
     }
   };
 }
 
+function balChartOptions(sc,msList){
+  const o=chartOpts(true);
+  const yFmt=v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':v;
+  o.scales.y.max=sc.max;
+  o.scales.y.ticks.callback=v=>yFmt(Math.round(sc.inv(v)));
+  if(sc.compressed){
+    o.scales.y.afterBuildTicks=axis=>{
+      const step=niceStep(sc.T/4);
+      const vals=[];
+      for(let v=0;v<=sc.T;v+=step)vals.push(v);
+      let prev=sc.f(vals[vals.length-1]);
+      msList.map(m=>m.cum).filter(c=>c>sc.T).sort((a,b)=>a-b).forEach(c=>{
+        const d=sc.f(c);
+        if(d-prev>sc.max*0.08){vals.push(c);prev=d;}
+      });
+      axis.ticks=vals.map(v=>({value:sc.f(v)}));
+    };
+  }
+  return o;
+}
+
 function renderCharts(){
   if(typeof Chart==='undefined')return;
-  const d1=getContribData(),d2=getBalData();
-  const e1=document.getElementById('chart-contrib-empty');
-  const e2=document.getElementById('chart-balance-empty');
   const legendEl=document.getElementById('chart-legend');
+  const isBal=chartTab==='balance';
+  document.querySelectorAll('#chart-legend .lg-bal').forEach(e=>e.style.display=isBal?'':'none');
+  document.querySelectorAll('#chart-legend .lg-contrib').forEach(e=>e.style.display=isBal?'none':'');
 
   if(chart1){chart1.destroy();chart1=null;}
-  if(d1){
-    e1.style.display='none';
-    chart1=new Chart(document.getElementById('chart-contrib').getContext('2d'),
-      {type:'bar',data:d1,options:chartOpts(true),plugins:[makeMsPlugin()]});
-    legendEl.style.display='block';
-  } else { e1.style.display='block'; }
-
   if(chart2){chart2.destroy();chart2=null;}
-  if(d2){
-    e2.style.display='none';
-    chart2=new Chart(document.getElementById('chart-balance').getContext('2d'),
-      {type:'bar',data:d2,options:chartOpts(true),plugins:[makeMsPlugin()]});
-  } else { e2.style.display='block'; }
+  let has=false;
+  if(isBal){
+    const d2=getBalData();
+    const e2=document.getElementById('chart-balance-empty');
+    if(d2){
+      e2.style.display='none';has=true;
+      chart2=new Chart(document.getElementById('chart-balance').getContext('2d'),
+        {type:'bar',data:d2,options:balChartOptions(d2.scale,d2.msList),plugins:[makeMsPlugin(d2.scale)]});
+    } else { e2.style.display='block'; }
+  } else {
+    // 入金推移はマイルストーン線なし（純粋な入金額のみ）
+    const d1=getContribData();
+    const e1=document.getElementById('chart-contrib-empty');
+    if(d1){
+      e1.style.display='none';has=true;
+      chart1=new Chart(document.getElementById('chart-contrib').getContext('2d'),
+        {type:'bar',data:d1,options:chartOpts(true)});
+    } else { e1.style.display='block'; }
+  }
+  legendEl.style.display=has?'block':'none';
 }
 
 // ═══════════════════════════════════════
