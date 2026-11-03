@@ -276,8 +276,8 @@
       </div>
     </div>
     <!-- Legend -->
-    <div id="chart-legend" style="display:none;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:8px 12px;">
-      <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:10px;color:var(--muted);">
+    <div id="chart-legend" style="display:flex;align-items:center;height:78px;box-sizing:border-box;overflow:hidden;visibility:hidden;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:8px 12px;">
+      <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:10px;font-size:10px;color:var(--muted);">
         <span class="lg-contrib" style="font-weight:600;color:var(--text);">入金：</span>
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2a78d6;margin-right:3px;"></span>達生お祝い金</span>
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>にん出資</span>
@@ -805,7 +805,7 @@ function setChartTab(t){
 function chartOpts(stacked){
   const yFmt=v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':v;
   return{
-    responsive:true,maintainAspectRatio:false,animation:{duration:400},
+    responsive:true,maintainAspectRatio:false,animation:{duration:400},layout:{padding:{bottom:6,right:4}},
     plugins:{legend:{display:false},tooltip:{
       bodyFont:{size:11},titleFont:{size:11},
       callbacks:{label:ctx=>{
@@ -815,7 +815,7 @@ function chartOpts(stacked){
     scales:{
       x:{stacked,grid:{display:false},border:{display:false},
         ticks:{font:{size:10},maxRotation:0,color:'#8C8480'}},
-      y:{stacked,grid:{color:'#EAE5DC',lineWidth:1},border:{display:false},
+      y:{stacked,grid:{color:c=>c.tick&&c.tick.value===0?'#4a443e':'#EAE5DC',lineWidth:c=>c.tick&&c.tick.value===0?1.6:1},border:{display:false},
         ticks:{font:{size:10},color:'#8C8480',callback:yFmt}}
     }
   };
@@ -1005,12 +1005,15 @@ function fcDetailHtml(fd,i){
   return h;
 }
 function fcColor(fd,i,sel){
-  const base=fd.values[i]<0?'#d03b3b':(fd.drops.some(d=>d.idx===i)?'#d4603a':'#2a78d6');
-  return sel?base:base+'8c';
+  // 基準月=青、マイナス=赤、出金のある月=濃いグレー、その他=薄いグレー
+  const base=i===0?'#2a78d6':fd.values[i]<0?'#d03b3b':(fd.drops.some(d=>d.idx===i)?'#6f6862':'#C9C4BE');
+  return base;
 }
+function fcBorder(i,sel){return sel?'#1A1714':'rgba(0,0,0,0)';}
 function fcSelect(i){
   fcSel=i;const fd=fcData;if(!fd||!chart3)return;
   chart3.data.datasets[0].backgroundColor=fd.values.map((_,k)=>fcColor(fd,k,k===i));
+  chart3.data.datasets[0].borderColor=fd.values.map((_,k)=>fcBorder(k,k===i));
   chart3.update('none');
   document.getElementById('fc-detail').innerHTML=fcDetailHtml(fd,i);
 }
@@ -1077,7 +1080,7 @@ function renderCharts(){
       o.scales.y.ticks.callback=yFmt;
       o.plugins.tooltip={enabled:false};
       o.interaction={mode:'index',intersect:false};
-      o.layout={padding:{top:14}};
+      o.layout={padding:{top:14,bottom:6,right:4}};
       o.onClick=(e,els,ch)=>{
         const r=ch.getElementsAtEventForMode(e,'index',{intersect:false},true);
         if(r.length)fcSelect(r[0].index);
@@ -1086,6 +1089,7 @@ function renderCharts(){
         type:'bar',
         data:{labels:fd.labels,datasets:[{label:'試算残高',data:fd.values,
           backgroundColor:fd.values.map((_,k)=>fcColor(fd,k,k===fcSel)),
+          borderColor:fd.values.map((_,k)=>fcBorder(k,k===fcSel)),borderWidth:2,
           borderRadius:3,borderSkipped:false}]},
         options:o,plugins:[makeForecastPlugin(fd)]});
       document.getElementById('fc-detail').innerHTML=fcDetailHtml(fd,fcSel);
@@ -1093,7 +1097,7 @@ function renderCharts(){
         `・横軸は月、棒は各月の月末の試算残高です。一番左が最新の月末残高です。<br>・棒をタップすると、その月の出金内容が見られます（▼の月が出金あり）。<br>・各マイルストーンの期限月に、そのマイルストーンの追加目標額を出金する想定です。今後の入金・運用益は含めていません。<br>・最終月末残高：<b style="color:${fd.endBal<0?'#d03b3b':'var(--text)'}">${fsign(fd.endBal)}</b>`;
     }
   }
-  legendEl.style.display=has?'block':'none';
+  legendEl.style.visibility=has?'visible':'hidden';
 }
 
 // ═══════════════════════════════════════
