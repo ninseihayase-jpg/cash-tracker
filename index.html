@@ -77,20 +77,24 @@
 
     /* ── MILESTONE H-SCROLL ── */
     .ms-scroll{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;
-      -webkit-overflow-scrolling:touch;scrollbar-width:none;
-      margin:0 -12px;padding:2px 12px 8px;}
+      -webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain;
+      margin:0 -12px;padding:2px 12px 4px;scroll-padding:0 12px;}
     .ms-scroll::-webkit-scrollbar{display:none;}
-    .ms-card-wrap{flex-shrink:0;width:74vw;max-width:290px;min-width:210px;scroll-snap-align:start;}
+    .ms-card-wrap{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;}
     .ms-card{background:var(--card);border-radius:14px;border:1px solid var(--border);
-      box-shadow:0 1px 3px rgba(0,0,0,.04);padding:13px;height:100%;}
-    .ms-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;}
+      box-shadow:0 2px 8px rgba(0,0,0,.06);padding:11px 13px;height:100%;}
+    .ms-dots{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:5px;}
+    .ms-dot{width:5px;height:5px;border-radius:3px;background:var(--border);transition:all .2s;}
+    .ms-dot.on{width:14px;background:var(--accent);}
+    .ms-count{font-size:10px;color:var(--muted);font-weight:600;margin-left:6px;}
+    .ms-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;}
     .ms-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;line-height:1.3;}
     .ms-deadline{font-size:11px;color:var(--muted);}
     .ms-pill{font-size:10px;font-weight:700;border-radius:20px;padding:3px 8px;white-space:nowrap;margin-left:6px;flex-shrink:0;}
     .pill-ok{background:var(--green-lt);color:var(--green);}
     .pill-warn{background:var(--amber-lt);color:var(--amber);}
     .pill-ng{background:var(--red-lt);color:var(--red);}
-    .ms-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:9px;}
+    .ms-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:7px;}
     .ms-num{background:var(--bg);border-radius:7px;padding:6px 3px;text-align:center;}
     .ms-num-lbl{font-size:9px;color:var(--muted);margin-bottom:2px;font-weight:500;}
     .ms-num-val{font-size:12px;font-weight:800;}
@@ -108,9 +112,19 @@
       padding:10px 8px 8px;min-width:0;}
     .chart-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
       letter-spacing:.05em;margin-bottom:6px;}
-    .chart-canvas-wrap{position:relative;height:260px;}
-    .chart-wrap{margin-bottom:8px;}
-    .chart-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:8px;}
+    .chart-canvas-wrap{position:relative;flex:1;min-height:0;}
+    /* ホームの1画面目：マイルストーン＋グラフが画面に収まる */
+    .home-top{height:calc(100vh - var(--hdr-h) - var(--nav-h) - 24px);
+      height:calc(100dvh - var(--hdr-h) - var(--nav-h) - 24px);
+      min-height:400px;display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+    .home-top .sec{margin-bottom:0;}
+    .home-top .sec-hdr{margin-bottom:6px;}
+    .home-chart{flex:1;min-height:0;display:flex;flex-direction:column;}
+    .home-chart .chart-wrap{flex:1;min-height:0;display:flex;flex-direction:column;margin-bottom:6px;}
+    .hist-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:8px;}
+    .hist-note{font-size:11px;color:var(--muted);margin:14px 2px 8px;font-weight:700;
+      text-transform:uppercase;letter-spacing:.06em;}
+        .chart-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:8px;}
     .chart-tab{flex:1;border:none;background:none;border-radius:8px;padding:7px 0;font-size:12px;
       font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;}
     .chart-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12);}
@@ -227,18 +241,18 @@
 
 <!-- ═══ HOME ═══ -->
 <div id="pg-home" class="page active">
+  <div class="home-top">
   <!-- Milestones -->
   <div class="sec">
     <div class="sec-hdr">
-      <span class="sec-title">マイルストーン</span>
+      <span class="sec-title">マイルストーン<span class="ms-count" id="ms-count"></span></span>
       <button class="btn-add" onclick="openModal('modal-ms')">＋ 追加</button>
     </div>
     <div id="ms-list"><div class="empty">マイルストーンを追加してください</div></div>
   </div>
 
   <!-- Charts -->
-  <div class="sec">
-    <div class="sec-hdr"><span class="sec-title">グラフ</span></div>
+  <div class="home-chart">
     <div class="chart-wrap">
       <div class="chart-tabs">
         <button class="chart-tab active" id="tab-balance" onclick="setChartTab('balance')">残高推移</button>
@@ -267,18 +281,17 @@
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Contribution History -->
-  <div class="sec">
-    <div class="sec-hdr"><span class="sec-title">出資履歴</span></div>
-    <div class="card" id="contrib-hist"><div class="empty">出資履歴がありません</div></div>
+<!-- History (tabs) -->
+<div class="sec">
+  <div class="hist-tabs">
+    <button class="chart-tab active" id="htab-contrib" onclick="setHistTab('contrib')">出資履歴</button>
+    <button class="chart-tab" id="htab-withdraw" onclick="setHistTab('withdraw')">引き出し履歴</button>
   </div>
-
-  <!-- Withdrawal History -->
-  <div class="sec">
-    <div class="sec-hdr"><span class="sec-title">引き出し履歴</span></div>
-    <div class="card" id="withdraw-hist"><div class="empty">引き出し履歴がありません</div></div>
-  </div>
+  <div class="card" id="contrib-hist"><div class="empty">出資履歴がありません</div></div>
+  <div class="card" id="withdraw-hist" style="display:none;"><div class="empty">引き出し履歴がありません</div></div>
+</div>
 </div>
 
 <!-- ═══ CONTRIBUTE ═══ -->
@@ -307,6 +320,8 @@
     </div>
     <button class="btn-submit" onclick="submitContribution()">記録する</button>
   </div>
+  <div class="hist-note">出資履歴</div>
+  <div class="card" id="contrib-hist-2"><div class="empty">出資履歴がありません</div></div>
 </div>
 
 <!-- ═══ WITHDRAW ═══ -->
@@ -331,6 +346,8 @@
     </div>
     <button class="btn-submit red" onclick="submitWithdrawal()">記録する</button>
   </div>
+  <div class="hist-note">引き出し履歴</div>
+  <div class="card" id="withdraw-hist-2"><div class="empty">引き出し履歴がありません</div></div>
 </div>
 
 <!-- ═══ BALANCE ═══ -->
@@ -611,7 +628,9 @@ function renderHdr(){
 function renderMS(){
   const list=milestones();
   const el=document.getElementById('ms-list');
-  if(!list.length){el.innerHTML='<div class="empty">マイルストーンを追加してください</div>';return;}
+  const cnt=document.getElementById('ms-count');
+  if(!list.length){el.innerHTML='<div class="empty">マイルストーンを追加してください</div>';cnt.textContent='';return;}
+  const prevLeft=el.querySelector('.ms-scroll')?.scrollLeft||0;
   el.innerHTML='<div class="ms-scroll">'+list.map(ms=>{
     const ok=ms.short<=0,warn=!ok&&ms.pct>=60;
     const pcls=ok?'pill-ok':warn?'pill-warn':'pill-ng';
@@ -633,7 +652,16 @@ function renderMS(){
       <div class="prog-bar"><div class="prog-fill ${fcls}" style="width:${ms.pct.toFixed(1)}%"></div></div>
       <div class="prog-foot"><span class="prog-pct">${ms.pct.toFixed(1)}%</span><span class="prog-pct">${fmS(ms.cum)}</span></div>
     </div></div>`;
-  }).join('')+'</div>';
+  }).join('')+'</div>'+(list.length>1?'<div class="ms-dots">'+list.map((_,i)=>`<span class="ms-dot${i?'':' on'}"></span>`).join('')+'</div>':'');
+  const sc=el.querySelector('.ms-scroll');
+  const upd=()=>{
+    const w=sc.firstElementChild.getBoundingClientRect().width+10;
+    const i=Math.max(0,Math.min(list.length-1,Math.round(sc.scrollLeft/w)));
+    el.querySelectorAll('.ms-dot').forEach((d,k)=>d.classList.toggle('on',k===i));
+    cnt.textContent=list.length>1?` ${i+1}/${list.length}`:'';
+  };
+  sc.addEventListener('scroll',upd,{passive:true});
+  sc.scrollLeft=prevLeft;upd();
 }
 
 const CAT_ORDER=['タッキーちゃんのお祝い金','にんの出資','あみの出資'];
@@ -641,8 +669,8 @@ const CAT_DOT={'タッキーちゃんのお祝い金':'d-takky','にんの出資
 
 function renderContrib(){
   const all=Object.values(data.contributions||{});
-  const el=document.getElementById('contrib-hist');
-  if(!all.length){el.innerHTML='<div class="empty">出資履歴がありません</div>';return;}
+  const els=['contrib-hist','contrib-hist-2'].map(i=>document.getElementById(i));
+  if(!all.length){els.forEach(e=>e.innerHTML='<div class="empty">出資履歴がありません</div>');return;}
   const grouped={};CAT_ORDER.forEach(c=>{grouped[c]=[];});
   all.forEach(c=>{if(grouped[c.category])grouped[c.category].push(c);});
   CAT_ORDER.forEach(c=>{grouped[c].sort((a,b)=>a.date.localeCompare(b.date));});
@@ -657,18 +685,19 @@ function renderContrib(){
       <button class="row-edit" onclick="openEditC('${c.id}')">✎</button>
       <button class="row-del" onclick="delContrib('${c.id}')">✕</button></div>`;});
   });
-  el.innerHTML=html;
+  els.forEach(e=>e.innerHTML=html);
 }
 
 function renderWithdraw(){
   const all=Object.values(data.withdrawals||{}).sort((a,b)=>a.date.localeCompare(b.date));
-  const el=document.getElementById('withdraw-hist');
-  if(!all.length){el.innerHTML='<div class="empty">引き出し履歴がありません</div>';return;}
-  el.innerHTML=all.map(w=>`<div class="hist-row">
+  const els=['withdraw-hist','withdraw-hist-2'].map(i=>document.getElementById(i));
+  if(!all.length){els.forEach(e=>e.innerHTML='<div class="empty">引き出し履歴がありません</div>');return;}
+  const html=all.map(w=>`<div class="hist-row">
     <div class="hist-dot d-withdraw"></div>
     <div class="hist-body"><div class="hist-top"><span class="hist-label">${esc(w.purpose)}${w.detail?'：'+esc(w.detail):''}</span><span class="hist-amt-neg">-${fm(w.amount)}</span></div><div class="hist-date">${fd(w.date)}</div></div>
     <button class="row-edit" onclick="openEditW('${w.id}')">✎</button>
     <button class="row-del" onclick="delWithdraw('${w.id}')">✕</button></div>`).join('');
+  els.forEach(e=>e.innerHTML=html);
 }
 
 function getMonthRange(){
@@ -726,6 +755,13 @@ function renderBal(){
 // ═══════════════════════════════════════
 let chart1=null,chart2=null;
 let chartTab='balance';
+
+function setHistTab(t){
+  document.getElementById('htab-contrib').classList.toggle('active',t==='contrib');
+  document.getElementById('htab-withdraw').classList.toggle('active',t==='withdraw');
+  document.getElementById('contrib-hist').style.display=t==='contrib'?'':'none';
+  document.getElementById('withdraw-hist').style.display=t==='withdraw'?'':'none';
+}
 
 function setChartTab(t){
   chartTab=t;
