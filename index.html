@@ -41,12 +41,23 @@
     .hdr-asof{flex:1;margin-left:8px;font-size:11px;font-weight:700;color:rgba(255,255,255,.75);}
     .hdr-badge{font-size:10px;font-weight:600;color:rgba(255,255,255,.6);
       background:rgba(255,255,255,.1);border-radius:20px;padding:3px 9px;}
-    .hdr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+    .hdr-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;}
     .hdr-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);
-      border-radius:9px;padding:5px 6px;}
+      border-radius:9px;padding:5px 4px;min-width:0;}
+    .hdr-stat{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+    .hdr-stat:active{background:rgba(255,255,255,.16);}
+    .info-lead{font-size:13px;line-height:1.7;color:var(--text);margin-bottom:12px;}
+    .info-box{background:var(--bg);border-radius:12px;padding:10px 12px;margin-bottom:12px;}
+    .info-box h4{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px;}
+    .info-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:3px 0;}
+    .info-row b{font-weight:800;white-space:nowrap;}
+    .info-row.sum{border-top:1px solid var(--border);margin-top:4px;padding-top:7px;font-weight:800;}
+    .info-note{font-size:12px;line-height:1.7;color:var(--muted);}
+    .info-ex{font-size:12px;line-height:1.8;color:var(--text);}
+    .btn-close{width:100%;margin-top:14px;padding:12px;border:none;border-radius:12px;background:var(--hdr);color:#fff;font-size:14px;font-weight:700;}
     .hdr-lbl{font-size:8px;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:2px;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .hdr-val{font-size:13px;font-weight:800;color:#fff;line-height:1;}
+    .hdr-val{font-size:11px;font-weight:800;color:#fff;line-height:1;white-space:nowrap;letter-spacing:-.02em;}
     .hdr-sub{font-size:9px;margin-top:2px;font-weight:500;}
     .pos{color:#6EE7A8;} .neg{color:#FCA5A5;} .neu{color:rgba(255,255,255,.65);}
 
@@ -227,20 +238,24 @@
     <span class="hdr-badge" id="sync-status">ローカル</span>
   </div>
   <div class="hdr-grid">
-    <div class="hdr-stat">
+    <div class="hdr-stat" role="button" onclick="showInfo('bal')">
       <div class="hdr-lbl">月末残高</div>
       <div class="hdr-val" id="hdr-balance">¥0</div>
-      <div class="hdr-sub" id="hdr-gain">収益 ¥0</div>
     </div>
-    <div class="hdr-stat">
+    <div class="hdr-stat" role="button" onclick="showInfo('gain')">
+      <div class="hdr-lbl">投資利益</div>
+      <div class="hdr-val" id="hdr-gain-val">¥0</div>
+      <div class="hdr-sub" id="hdr-gain">(0.0%)</div>
+    </div>
+    <div class="hdr-stat" role="button" onclick="showInfo('net')">
       <div class="hdr-lbl">純出資額</div>
       <div class="hdr-val" id="hdr-net">¥0</div>
     </div>
-    <div class="hdr-stat">
+    <div class="hdr-stat" role="button" onclick="showInfo('cel')">
       <div class="hdr-lbl">達生お祝い金</div>
       <div class="hdr-val" id="hdr-celebration">¥0</div>
     </div>
-    <div class="hdr-stat">
+    <div class="hdr-stat" role="button" onclick="showInfo('wd')">
       <div class="hdr-lbl">引き出し合計</div>
       <div class="hdr-val" id="hdr-withdraw-total">¥0</div>
     </div>
@@ -283,10 +298,9 @@
     <!-- Legend -->
     <div id="chart-legend" style="display:flex;align-items:center;height:40px;box-sizing:border-box;overflow:hidden;visibility:hidden;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:3px 8px;flex-shrink:0;">
       <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:10px;color:var(--muted);">
-        <span class="lg-contrib" style="font-weight:600;color:var(--text);">入金：</span>
-        <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2a78d6;margin-right:3px;"></span>達生お祝い金</span>
-        <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>にん出資</span>
-        <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e87ba4;margin-right:3px;"></span>あみ出資</span>
+        <span class="lg-contrib" style="font-weight:600;color:var(--text);">毎月の純額（入金−出金）：</span>
+        <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2a78d6;margin-right:3px;"></span>プラス</span>
+        <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d03b3b;margin-right:3px;"></span>マイナス</span>
         <div class="lg-fc" style="flex:1 1 100%;line-height:1.5;">
           <div id="fc-detail" style="background:var(--bg);border-radius:8px;padding:2px 8px;height:32px;box-sizing:border-box;overflow-y:auto;font-size:10.5px;line-height:1.4;color:var(--muted);"></div>
         </div>
@@ -503,6 +517,15 @@
 </nav>
 
 <!-- ═══ MODAL: MILESTONE ═══ -->
+<div class="modal-overlay" id="modal-info" onclick="closeOnBg(event,'modal-info')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="info-title"></div>
+    <div id="info-body"></div>
+    <button class="btn-close" onclick="document.getElementById('modal-info').classList.remove('open')">閉じる</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-ms" onclick="closeOnBg(event,'modal-ms')">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -594,6 +617,7 @@ async function dbDel(path,id){
 // すべて「最新の月末残高の月」時点で統一して集計する
 //  月末残高 = その月の手入力残高 / 入金・引き出し = その月末までの累計
 //  投資収益 = 月末残高 − 純出資額（純出資額 = 入金累計 − 引き出し累計）
+//  利益率 = 投資収益 ÷ 入金累計（出資した総額に対して何%増えたか）
 function asOfMonth(){
   const ms=Object.keys(getBalByMonth()).sort();
   return ms.length?ms[ms.length-1]:null;
@@ -641,7 +665,8 @@ function renderHdr(){
   document.getElementById('hdr-asof').textContent=asOf?`${fdYM(asOf+'-01')}末時点`:'残高未入力';
   document.getElementById('hdr-balance').textContent=fm(bal);
   const ge=document.getElementById('hdr-gain');
-  ge.textContent=(gain>=0?'+':'-')+fm(gain);
+  document.getElementById('hdr-gain-val').textContent=(gain>=0?'+':'-')+fm(gain);
+  ge.textContent=tc>0?`(${gain>=0?'+':'-'}${(Math.abs(gain)/tc*100).toFixed(1)}%)`:'(-)';
   ge.className='hdr-sub '+(gain>0?'pos':gain<0?'neg':'neu');
   document.getElementById('hdr-net').textContent=fm(net);
   document.getElementById('hdr-celebration').textContent=fm(cel);
@@ -816,7 +841,9 @@ function chartOpts(stacked){
       bodyFont:{size:11},titleFont:{size:11},
       callbacks:{label:ctx=>{
         const raw=ctx.dataset.raw?ctx.dataset.raw[ctx.dataIndex]:ctx.parsed.y;
-        return `${ctx.dataset.label}: ¥${Math.abs(raw).toLocaleString('ja-JP')}`;}}
+        return `${ctx.dataset.label}: ${raw<0?'-':''}¥${Math.abs(raw).toLocaleString('ja-JP')}`;},
+        afterBody:items=>{const d=items[0].chart.data;if(!d.inArr)return[];const i=items[0].dataIndex;
+          return[`入金: ¥${d.inArr[i].toLocaleString('ja-JP')}`,`出金: ¥${d.outArr[i].toLocaleString('ja-JP')}`];}}
     }},
     scales:{
       x:{stacked,grid:{display:false},border:{display:false},afterFit:a=>{a.height=34;},
@@ -830,23 +857,18 @@ function chartOpts(stacked){
 function getContribData(){
   const all=Object.values(data.contributions||{});
   if(!all.length)return null;
-  const months=[...new Set(all.map(c=>c.date.slice(0,7)))].sort();
-  const cats=['タッキーちゃんのお祝い金','にんの出資','あみの出資'];
-  const colors=['#2a78d6','#eb6834','#e87ba4'];
+  const ws=Object.values(data.withdrawals||{});
+  const months=[...new Set([...all,...ws].map(c=>c.date.slice(0,7)))].sort();
   const labels=months.map((m,i)=>{const[y,mo]=m.split('-');const py=i>0?months[i-1].split('-')[0]:null;return py!==y?[`${+mo}月`,y]:`${+mo}月`;});
-  // 累積：各月の棒グラフ高さ = その月までの合計
-  return{labels,datasets:cats.map((cat,i)=>{
-    let cum=0;
-    return{
-      label:cat.replace('のお祝い金','').replace('の出資',''),
-      data:months.map(m=>{
-        cum+=all.filter(c=>c.date.slice(0,7)===m&&c.category===cat).reduce((s,c)=>s+c.amount,0);
-        return cum;
-      }),
-      backgroundColor:colors[i],borderRadius:3,stack:'c',
-      borderWidth:1,borderColor:'rgba(255,255,255,.3)'
-    };
-  })};
+  // 各月の純額 = その月の入金 − その月の出金（累積しない）
+  const inArr=months.map(m=>all.filter(c=>c.date.slice(0,7)===m).reduce((s,c)=>s+c.amount,0));
+  const outArr=months.map(m=>ws.filter(w=>w.date.slice(0,7)===m).reduce((s,w)=>s+w.amount,0));
+  const net=months.map((_,i)=>inArr[i]-outArr[i]);
+  return{labels,inArr,outArr,datasets:[{
+    label:'純額',data:net,
+    backgroundColor:net.map(v=>v>=0?'#2a78d6':'#d03b3b'),
+    borderRadius:3,borderWidth:1,borderColor:'rgba(255,255,255,.3)'
+  }]};
 }
 
 // 縦軸の変換。マイルストーンが棒グラフよりずっと上にある場合、棒の上側を圧縮して全部収める
@@ -1007,6 +1029,8 @@ function commonZ(){
   const zs=[];
   const d2=getBalData();
   if(d2){const neg=Math.max(0,-Math.min(0,...d2.datasets[1].data))*1.06;zs.push(neg/(d2.scale.max+neg));}
+  const d1=getContribData();
+  if(d1)zs.push(contribNeg(d1)/(contribPos(d1)+contribNeg(d1)));
   const fd=getForecastData();
   if(!fd.empty)zs.push(fd.sc.neg/(fd.sc.pos+fd.sc.neg));
   return Math.min(0.6,Math.max(0,...zs));
@@ -1015,11 +1039,8 @@ function applyZ(o,pos,z){
   o.scales.y.max=pos;
   o.scales.y.min=z>0?-z/(1-z)*pos:0;
 }
-function contribPos(d1){
-  const n=d1.labels.length;let m=1;
-  for(let i=0;i<n;i++)m=Math.max(m,d1.datasets.reduce((s,d)=>s+d.data[i],0));
-  return m*1.08;
-}
+function contribPos(d1){return Math.max(1,...d1.datasets[0].data)*1.08;}
+function contribNeg(d1){return Math.max(0,-Math.min(0,...d1.datasets[0].data))*1.06;}
 
 const fsign=v=>(v<0?'-':'')+'¥'+Math.abs(Math.round(v)).toLocaleString('ja-JP');
 
@@ -1131,7 +1152,7 @@ function renderCharts(){
     if(d1){
       e1.style.display='none';has=true;
       chart1=new Chart(document.getElementById('chart-contrib').getContext('2d'),
-        {type:'bar',data:d1,options:(()=>{const o=chartOpts(true);applyZ(o,contribPos(d1),Z);finishY(o,{linLo:0});return o;})()});
+        {type:'bar',data:d1,options:(()=>{const o=chartOpts(false);applyZ(o,contribPos(d1),Z);finishY(o,{linLo:-contribNeg(d1)/1.06});return o;})()});
     } else { e1.style.display='block'; }
   } else {
     const fd=getForecastData();
@@ -1298,6 +1319,48 @@ function showPage(name,btn){
   if(name==='contribute'&&!document.getElementById('c-date').value)document.getElementById('c-date').value=t;
   if(name==='withdraw'&&!document.getElementById('w-date').value)document.getElementById('w-date').value=t;
   if(name==='home')renderCharts();
+}
+
+// ── 上部カードの解説
+function showInfo(k){
+  const{tc,tw,cel,net,bal,gain,asOf}=stats();
+  const sg=v=>(v>=0?'+':'-')+fm(v);
+  const ym=asOf?fdYM(asOf+'-01')+'末':'最新の月末';
+  const row=(a,b,c)=>`<div class="info-row${c?' sum':''}"><span>${a}</span><b>${b}</b></div>`;
+  const box=(t,rows)=>`<div class="info-box"><h4>${t}</h4>${rows}</div>`;
+  const rate=tc>0?(gain/tc*100).toFixed(1)+'%':'―';
+  let title,body;
+  if(k==='bal'){
+    title='月末残高';
+    body=`<p class="info-lead">楽天証券の<b>${ym}の残高</b>です。手入力した値で、引き出し済みの「いま実際にある額」です。</p>`+
+      box('いまの数字',row('月末残高',fm(bal)))+
+      `<p class="info-note">投資の元手＋増減した分の合計です。引き出したお金は、すでに含まれていません。</p>`;
+  }else if(k==='gain'){
+    title='投資利益（利益率）';
+    body=`<p class="info-lead">出資した総額に対して、<b>いくら・何%増えたか</b>を表します。引き出した分も「増えた分」として数えます。</p>`+
+      box('計算',row('① 月末残高',fm(bal))+row('② ＋ 引き出し合計',fm(tw))+row('③ − 入金合計',fm(tc))+row('投資利益（①+②−③）',sg(gain),1))+
+      box('利益率',row('投資利益 ÷ 入金合計',`${sg(gain)} ÷ ${fm(tc)}`)+row('利益率',tc>0?(gain>=0?'+':'-')+Math.abs(gain/tc*100).toFixed(1)+'%':'―',1))+
+      `<div class="info-box"><h4>たとえば</h4><div class="info-ex">100万円を出資 → 増えて120万円 → 20万円を引き出した。<br>残高は100万円、引き出しは20万円、入金は100万円。<br>投資利益 ＝ 100＋20−100 ＝ <b>+20万円</b><br>利益率 ＝ 20 ÷ 100 ＝ <b>+20%</b><br>（出資100に対して20%増えた、という見方です）</div></div>`+
+      `<p class="info-note">※ 追加で入金するほど、利益率の分母（入金合計）も大きくなります。</p>`;
+  }else if(k==='net'){
+    title='純出資額';
+    body=`<p class="info-lead">これまでに<b>入れたお金から、引き出したお金を引いた額</b>です。いま運用に残っている元本のイメージです。</p>`+
+      box('計算',row('入金合計',fm(tc))+row('− 引き出し合計',fm(tw))+row('純出資額',fm(net),1))+
+      `<p class="info-note">利益率の分母には使っていません（分母は入金合計）。</p>`;
+  }else if(k==='cel'){
+    title='達生お祝い金';
+    body=`<p class="info-lead">入金のうち、<b>「タッキーちゃんのお祝い金」</b>として記録したものの合計です。</p>`+
+      box('いまの数字',row('お祝い金の合計',fm(cel))+row('入金合計に占める割合',tc>0?(cel/tc*100).toFixed(1)+'%':'―'))+
+      `<p class="info-note">${ym}までの集計です。</p>`;
+  }else{
+    title='引き出し合計';
+    body=`<p class="info-lead">これまでに証券口座から<b>引き出した金額の合計</b>です（${ym}まで）。</p>`+
+      box('いまの数字',row('引き出し合計',fm(tw)))+
+      `<p class="info-note">引き出した分は月末残高から減りますが、投資利益の計算では「すでに受け取った分」として戻して数えます。</p>`;
+  }
+  document.getElementById('info-title').textContent=title;
+  document.getElementById('info-body').innerHTML=body;
+  openModal('modal-info');
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeOnBg(e,id){if(e.target.id===id)document.getElementById(id).classList.remove('open');}
