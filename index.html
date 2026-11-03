@@ -239,7 +239,7 @@
   </div>
   <div class="hdr-grid">
     <div class="hdr-stat" role="button" onclick="showInfo('bal')">
-      <div class="hdr-lbl">月末残高</div>
+      <div class="hdr-lbl">最新残高</div>
       <div class="hdr-val" id="hdr-balance">¥0</div>
     </div>
     <div class="hdr-stat" role="button" onclick="showInfo('gain')">
@@ -248,7 +248,7 @@
       <div class="hdr-sub" id="hdr-gain">(0.0%)</div>
     </div>
     <div class="hdr-stat" role="button" onclick="showInfo('net')">
-      <div class="hdr-lbl">純出資額</div>
+      <div class="hdr-lbl">出資額</div>
       <div class="hdr-val" id="hdr-net">¥0</div>
     </div>
     <div class="hdr-stat" role="button" onclick="showInfo('cel')">
@@ -305,7 +305,7 @@
           <div id="fc-detail" style="background:var(--bg);border-radius:8px;padding:2px 8px;height:32px;box-sizing:border-box;overflow-y:auto;font-size:10.5px;line-height:1.4;color:var(--muted);"></div>
         </div>
         <span class="lg-bal" style="margin-left:4px;font-weight:600;color:var(--text);">月末残高の内訳：</span>
-        <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B0ACAA;margin-right:3px;"></span>純出資額</span>
+        <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B0ACAA;margin-right:3px;"></span>元本（入金−引き出し）</span>
         <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1baf7a;margin-right:3px;"></span>収益</span>
         <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d03b3b;margin-right:3px;"></span>損失</span>
       </div>
@@ -617,6 +617,7 @@ async function dbDel(path,id){
 // すべて「最新の月末残高の月」時点で統一して集計する
 //  月末残高 = その月の手入力残高 / 入金・引き出し = その月末までの累計
 //  投資収益 = 月末残高 − 純出資額（純出資額 = 入金累計 − 引き出し累計）
+//  最新残高 = 最新の月末残高 + それ以降の入金 − それ以降の引き出し
 //  利益率 = 投資収益 ÷ 入金累計（出資した総額に対して何%増えたか）
 function asOfMonth(){
   const ms=Object.keys(getBalByMonth()).sort();
@@ -624,15 +625,19 @@ function asOfMonth(){
 }
 function stats(){
   const M=asOfMonth();
-  const upto=x=>!M||x.date.slice(0,7)<=M;
-  const cs=Object.values(data.contributions||{}).filter(upto);
-  const ws=Object.values(data.withdrawals||{}).filter(upto);
+  const cs=Object.values(data.contributions||{});
+  const ws=Object.values(data.withdrawals||{});
   const tc=cs.reduce((s,c)=>s+(c.amount||0),0);
   const tw=ws.reduce((s,w)=>s+(w.amount||0),0);
   const cel=cs.filter(c=>c.category==='タッキーちゃんのお祝い金').reduce((s,c)=>s+c.amount,0);
   const net=tc-tw;
-  const bal=M?getBalByMonth()[M].balance:0;
-  return{tc,tw,cel,net,bal,gain:bal-net,asOf:M};
+  // 最新残高 = 最新の月末残高 + それ以降の入金 − それ以降の引き出し
+  const after=x=>M&&x.date.slice(0,7)>M;
+  const laterC=cs.filter(after).reduce((s,c)=>s+(c.amount||0),0);
+  const laterW=ws.filter(after).reduce((s,w)=>s+(w.amount||0),0);
+  const baseBal=M?getBalByMonth()[M].balance:0;
+  const bal=baseBal+laterC-laterW;
+  return{tc,tw,cel,net,bal,baseBal,laterC,laterW,gain:bal-net,asOf:M};
 }
 function milestones(){
   const{bal}=stats();let cum=0;
@@ -661,14 +666,14 @@ function thisMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getM
 function renderAll(){renderHdr();renderMS();renderContrib();renderWithdraw();renderBal();renderCharts();}
 
 function renderHdr(){
-  const{tc,tw,cel,net,bal,gain,asOf}=stats();
-  document.getElementById('hdr-asof').textContent=asOf?`${fdYM(asOf+'-01')}末時点`:'残高未入力';
+  const{tc,tw,cel,net,bal,gain,asOf,laterC,laterW}=stats();
+  document.getElementById('hdr-asof').textContent=asOf?`${fdYM(asOf+'-01')}末残高`+((laterC||laterW)?'＋以降の入出金':''):'残高未入力';
   document.getElementById('hdr-balance').textContent=fm(bal);
   const ge=document.getElementById('hdr-gain');
   document.getElementById('hdr-gain-val').textContent=(gain>=0?'+':'-')+fm(gain);
   ge.textContent=tc>0?`(${gain>=0?'+':'-'}${(Math.abs(gain)/tc*100).toFixed(1)}%)`:'(-)';
   ge.className='hdr-sub '+(gain>0?'pos':gain<0?'neg':'neu');
-  document.getElementById('hdr-net').textContent=fm(net);
+  document.getElementById('hdr-net').textContent=fm(tc);
   document.getElementById('hdr-celebration').textContent=fm(cel);
   document.getElementById('hdr-withdraw-total').textContent=fm(tw);
 }
@@ -907,7 +912,7 @@ function getBalData(){
   const sc=makeScale(Math.max(...balArr,...netArr,1),maxMs);
   const f=sc.f;
   return{scale:sc,msList,labels,datasets:[
-    {label:'純出資額',data:netArr.map(v=>f(v)),raw:netArr,backgroundColor:'#B0ACAA',
+    {label:'元本',data:netArr.map(v=>f(v)),raw:netArr,backgroundColor:'#B0ACAA',
       borderRadius:3,stack:'b',borderWidth:1,borderColor:'rgba(255,255,255,.3)'},
     {label:'投資収益',data:gainArr.map((g,i)=>f(netArr[i]+g)-f(netArr[i])),raw:gainArr,
       backgroundColor:gainArr.map(g=>g>=0?'#1baf7a':'#d03b3b'),
@@ -1323,7 +1328,7 @@ function showPage(name,btn){
 
 // ── 上部カードの解説
 function showInfo(k){
-  const{tc,tw,cel,net,bal,gain,asOf}=stats();
+  const{tc,tw,cel,net,bal,baseBal,laterC,laterW,gain,asOf}=stats();
   const sg=v=>(v>=0?'+':'-')+fm(v);
   const ym=asOf?fdYM(asOf+'-01')+'末':'最新の月末';
   const row=(a,b,c)=>`<div class="info-row${c?' sum':''}"><span>${a}</span><b>${b}</b></div>`;
@@ -1331,32 +1336,34 @@ function showInfo(k){
   const rate=tc>0?(gain/tc*100).toFixed(1)+'%':'―';
   let title,body;
   if(k==='bal'){
-    title='月末残高';
-    body=`<p class="info-lead">楽天証券の<b>${ym}の残高</b>です。手入力した値で、引き出し済みの「いま実際にある額」です。</p>`+
-      box('いまの数字',row('月末残高',fm(bal)))+
-      `<p class="info-note">投資の元手＋増減した分の合計です。引き出したお金は、すでに含まれていません。</p>`;
+    title='最新残高';
+    const later=(laterC||laterW);
+    body=`<p class="info-lead">いまの口座にある額の目安です。<b>最後に入力した月末残高</b>に、<b>その後の入金・引き出し</b>を足し引きして出しています。</p>`+
+      box('計算',row(`${ym}残高（入力値）`,fm(baseBal))+row('＋ それ以降の入金',fm(laterC))+row('− それ以降の引き出し',fm(laterW))+row('最新残高',fm(bal),1))+
+      `<p class="info-note">${later?'それ以降の入出金は、その月の月末残高を入力すると入力値に含まれるので、二重には数えません。':'いまは、最後の月末残高の後に入出金がないので、入力値と同じです。'}</p>`;
   }else if(k==='gain'){
     title='投資利益（利益率）';
     body=`<p class="info-lead">出資した総額に対して、<b>いくら・何%増えたか</b>を表します。引き出した分も「増えた分」として数えます。</p>`+
-      box('計算',row('① 月末残高',fm(bal))+row('② ＋ 引き出し合計',fm(tw))+row('③ − 入金合計',fm(tc))+row('投資利益（①+②−③）',sg(gain),1))+
+      box('計算',row('① 最新残高',fm(bal))+row('② ＋ 引き出し合計',fm(tw))+row('③ − 入金合計',fm(tc))+row('投資利益（①+②−③）',sg(gain),1))+
       box('利益率',row('投資利益 ÷ 入金合計',`${sg(gain)} ÷ ${fm(tc)}`)+row('利益率',tc>0?(gain>=0?'+':'-')+Math.abs(gain/tc*100).toFixed(1)+'%':'―',1))+
       `<div class="info-box"><h4>たとえば</h4><div class="info-ex">100万円を出資 → 増えて120万円 → 20万円を引き出した。<br>残高は100万円、引き出しは20万円、入金は100万円。<br>投資利益 ＝ 100＋20−100 ＝ <b>+20万円</b><br>利益率 ＝ 20 ÷ 100 ＝ <b>+20%</b><br>（出資100に対して20%増えた、という見方です）</div></div>`+
       `<p class="info-note">※ 追加で入金するほど、利益率の分母（入金合計）も大きくなります。</p>`;
   }else if(k==='net'){
-    title='純出資額';
-    body=`<p class="info-lead">これまでに<b>入れたお金から、引き出したお金を引いた額</b>です。いま運用に残っている元本のイメージです。</p>`+
-      box('計算',row('入金合計',fm(tc))+row('− 引き出し合計',fm(tw))+row('純出資額',fm(net),1))+
-      `<p class="info-note">利益率の分母には使っていません（分母は入金合計）。</p>`;
+    title='出資額';
+    body=`<p class="info-lead">これまでに<b>入れたお金の合計</b>です。利益を引き出しても、出資額は減りません。</p>`+
+      box('計算',row('入金合計',fm(tc)))+
+      `<div class="info-box"><h4>ご参考：元本（入金 − 引き出し）</h4>${row('入金合計',fm(tc))+row('− 引き出し合計',fm(tw))+row('元本',fm(net),1)}</div>`+
+      `<p class="info-note">元本は、グラフ「残高の内訳」で使っています。利益率の分母は出資額（入金合計）です。</p>`;
   }else if(k==='cel'){
     title='達生お祝い金';
     body=`<p class="info-lead">入金のうち、<b>「タッキーちゃんのお祝い金」</b>として記録したものの合計です。</p>`+
       box('いまの数字',row('お祝い金の合計',fm(cel))+row('入金合計に占める割合',tc>0?(cel/tc*100).toFixed(1)+'%':'―'))+
-      `<p class="info-note">${ym}までの集計です。</p>`;
+      ``;
   }else{
     title='引き出し合計';
-    body=`<p class="info-lead">これまでに証券口座から<b>引き出した金額の合計</b>です（${ym}まで）。</p>`+
+    body=`<p class="info-lead">これまでに証券口座から<b>引き出した金額の合計</b>です。</p>`+
       box('いまの数字',row('引き出し合計',fm(tw)))+
-      `<p class="info-note">引き出した分は月末残高から減りますが、投資利益の計算では「すでに受け取った分」として戻して数えます。</p>`;
+      `<p class="info-note">引き出した分は口座の残高から減りますが、投資利益の計算では「すでに受け取った分」として戻して数えます。最新残高にも、最後の月末残高より後の引き出しが反映されます。</p>`;
   }
   document.getElementById('info-title').textContent=title;
   document.getElementById('info-body').innerHTML=body;
