@@ -83,23 +83,26 @@
     .ms-scroll::-webkit-scrollbar{display:none;}
     .ms-card-wrap{flex:0 0 86%;scroll-snap-align:center;}
     .ms-card{background:var(--card);border-radius:16px;border:1px solid var(--border);
-      box-shadow:0 4px 14px rgba(0,0,0,.08);padding:11px 13px;height:100%;
+      box-shadow:0 4px 14px rgba(0,0,0,.08);padding:9px 12px;height:100%;
       transform-origin:center;will-change:transform,opacity;}
     .ms-dots{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:2px;}
     .ms-dot{width:5px;height:5px;border-radius:3px;background:var(--border);transition:width .25s,background .25s;}
     .ms-dot.on{width:14px;background:var(--accent);}
-    .ms-count{font-size:10px;color:var(--muted);font-weight:600;margin-left:6px;}
-    .ms-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;}
-    .ms-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;line-height:1.3;}
+    .ms-count{font-size:10px;color:var(--muted);font-weight:600;margin-left:6px;text-transform:none;letter-spacing:0;}
+    .ms-count .ms-dots{display:inline-flex;margin:0 6px 0 0;vertical-align:middle;}
+    .ms-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+    .ms-name{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .ms-top>div:first-child{min-width:0;}
     .ms-deadline{font-size:11px;color:var(--muted);}
     .ms-pill{font-size:10px;font-weight:700;border-radius:20px;padding:3px 8px;white-space:nowrap;margin-left:6px;flex-shrink:0;}
     .pill-ok{background:var(--green-lt);color:var(--green);}
     .pill-warn{background:var(--amber-lt);color:var(--amber);}
     .pill-ng{background:var(--red-lt);color:var(--red);}
-    .ms-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:7px;}
-    .ms-num{background:var(--bg);border-radius:7px;padding:6px 3px;text-align:center;}
-    .ms-num-lbl{font-size:9px;color:var(--muted);margin-bottom:2px;font-weight:500;}
-    .ms-num-val{font-size:12px;font-weight:800;}
+    .ms-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;}
+    .ms-num{background:var(--bg);border-radius:7px;padding:4px 3px;text-align:center;}
+    .ms-num-lbl{font-size:9px;color:var(--muted);margin-bottom:1px;font-weight:500;}
+    .ms-num-val{font-size:12px;font-weight:800;line-height:1.25;}
     .ms-num-val.pos{color:var(--green);} .ms-num-val.neg{color:var(--red);}
     .prog-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
     .prog-fill{height:100%;border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);}
@@ -114,15 +117,16 @@
       padding:10px 8px 8px;min-width:0;}
     .chart-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
       letter-spacing:.05em;margin-bottom:6px;}
-    .chart-canvas-wrap{position:relative;flex:1;min-height:250px;}
+    .chart-canvas-wrap{position:relative;flex:1;min-height:120px;}
     .chart-canvas-wrap canvas{position:absolute;left:0;top:0;}
     /* ホームの1画面目：マイルストーン＋グラフが画面に収まる */
-    .home-top{min-height:calc(100vh - var(--hdr-h) - var(--nav-h) - 24px);
-      min-height:calc(100dvh - var(--hdr-h) - var(--nav-h) - 24px);
-      display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+    .home-top{height:calc(100vh - var(--hdr-h) - var(--nav-h) - 24px);
+      height:calc(100dvh - var(--hdr-h) - var(--nav-h) - 24px);
+      min-height:480px;display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
     .home-top .sec{margin-bottom:0;}
     .home-top .sec-hdr{margin-bottom:6px;}
     .home-chart{flex:1;min-height:0;display:flex;flex-direction:column;}
+    .chart-tabs{flex-shrink:0;}
     .home-chart .chart-wrap{flex:1;min-height:0;display:flex;flex-direction:column;margin-bottom:6px;}
     .hist-tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:8px;}
     .hist-note{font-size:11px;color:var(--muted);margin:14px 2px 8px;font-weight:700;
@@ -277,14 +281,14 @@
       </div>
     </div>
     <!-- Legend -->
-    <div id="chart-legend" style="display:flex;align-items:center;height:78px;box-sizing:border-box;overflow:hidden;visibility:hidden;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:8px 12px;">
-      <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:10px;font-size:10px;color:var(--muted);">
+    <div id="chart-legend" style="display:flex;align-items:center;height:40px;box-sizing:border-box;overflow:hidden;visibility:hidden;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:3px 8px;flex-shrink:0;">
+      <div style="flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:10px;color:var(--muted);">
         <span class="lg-contrib" style="font-weight:600;color:var(--text);">入金：</span>
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2a78d6;margin-right:3px;"></span>達生お祝い金</span>
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>にん出資</span>
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e87ba4;margin-right:3px;"></span>あみ出資</span>
         <div class="lg-fc" style="flex:1 1 100%;line-height:1.5;">
-          <div id="fc-detail" style="background:var(--bg);border-radius:8px;padding:5px 8px;height:52px;overflow-y:auto;font-size:11px;color:var(--muted);"></div>
+          <div id="fc-detail" style="background:var(--bg);border-radius:8px;padding:2px 8px;height:32px;box-sizing:border-box;overflow-y:auto;font-size:10.5px;line-height:1.4;color:var(--muted);"></div>
         </div>
         <span class="lg-bal" style="margin-left:4px;font-weight:600;color:var(--text);">月末残高の内訳：</span>
         <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B0ACAA;margin-right:3px;"></span>純出資額</span>
@@ -637,7 +641,7 @@ function renderHdr(){
   document.getElementById('hdr-asof').textContent=asOf?`${fdYM(asOf+'-01')}末時点`:'残高未入力';
   document.getElementById('hdr-balance').textContent=fm(bal);
   const ge=document.getElementById('hdr-gain');
-  ge.textContent=(gain>=0?'+':'')+fm(gain);
+  ge.textContent=(gain>=0?'+':'-')+fm(gain);
   ge.className='hdr-sub '+(gain>0?'pos':gain<0?'neg':'neu');
   document.getElementById('hdr-net').textContent=fm(net);
   document.getElementById('hdr-celebration').textContent=fm(cel);
@@ -648,7 +652,7 @@ function renderMS(){
   const list=milestones();
   const el=document.getElementById('ms-list');
   const cnt=document.getElementById('ms-count');
-  if(!list.length){el.innerHTML='<div class="empty">マイルストーンを追加してください</div>';cnt.textContent='';return;}
+  if(!list.length){el.innerHTML='<div class="empty">マイルストーンを追加してください</div>';cnt.innerHTML='';return;}
   const prevLeft=el.querySelector('.ms-scroll')?.scrollLeft||0;
   el.innerHTML='<div class="ms-scroll">'+list.map(ms=>{
     const ok=ms.short<=0,warn=!ok&&ms.pct>=60;
@@ -657,7 +661,7 @@ function renderMS(){
     const fcls=ok?'fill-ok':warn?'fill-warn':'fill-ng';
     return`<div class="ms-card-wrap"><div class="ms-card">
       <div class="ms-top">
-        <div><div class="ms-name">${esc(ms.purpose)}</div><div class="ms-deadline">期限 ${fd(ms.deadline)}（残${ms.days}日）</div></div>
+        <div><div class="ms-name">${esc(ms.purpose)}</div></div>
         <div style="display:flex;align-items:center;">
           <span class="ms-pill ${pcls}">${plbl}</span>
           <button class="ms-del" onclick="delMS('${ms.id}')">✕</button>
@@ -669,9 +673,11 @@ function renderMS(){
         <div class="ms-num"><div class="ms-num-lbl">${ok?'超過':'不足'}</div><div class="ms-num-val ${ok?'pos':'neg'}">${ok?'+':'-'}${fmS(ms.short)}</div></div>
       </div>
       <div class="prog-bar"><div class="prog-fill ${fcls}" style="width:${ms.pct.toFixed(1)}%"></div></div>
-      <div class="prog-foot"><span class="prog-pct">${ms.pct.toFixed(1)}%</span><span class="prog-pct">${fmS(ms.cum)}</span></div>
+      <div class="prog-foot"><span class="prog-pct">${ms.pct.toFixed(1)}%</span><span class="prog-pct">期限 ${fd(ms.deadline)}（残${ms.days}日）</span></div>
     </div></div>`;
-  }).join('')+'</div>'+(list.length>1?'<div class="ms-dots">'+list.map((_,i)=>`<span class="ms-dot${i?'':' on'}"></span>`).join('')+'</div>':'');
+  }).join('')+'</div>';
+  const asOfTxt=stats().asOf?`※${fdYM(stats().asOf+'-01')}末残高基準`:'';
+  cnt.innerHTML=(list.length>1?'<span class="ms-dots">'+list.map((_,i)=>`<span class="ms-dot${i?'':' on'}"></span>`).join('')+'</span>':'')+asOfTxt;
   const sc=el.querySelector('.ms-scroll');
   const cards=[...sc.children];
   let raf=0;
@@ -688,8 +694,7 @@ function renderMS(){
       inner.style.opacity=1-0.5*a;                    // 端のカードは薄く
       if(Math.abs(d)<bd){bd=Math.abs(d);best=k;}
     });
-    el.querySelectorAll('.ms-dot').forEach((d,k)=>d.classList.toggle('on',k===best));
-    cnt.textContent=(list.length>1?` ${best+1}/${list.length}　`:' ')+(stats().asOf?`※${fdYM(stats().asOf+'-01')}末残高基準`:'');
+    cnt.querySelectorAll('.ms-dot').forEach((d,k)=>d.classList.toggle('on',k===best));
   };
   sc.addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(upd);},{passive:true});
   sc.scrollLeft=prevLeft;upd();
@@ -806,7 +811,7 @@ function setChartTab(t){
 function chartOpts(stacked){
   const yFmt=v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':v;
   return{
-    responsive:true,maintainAspectRatio:false,animation:{duration:400},layout:{padding:{bottom:6,right:4}},
+    responsive:true,maintainAspectRatio:false,animation:{duration:400},layout:{padding:{top:14,bottom:4,right:4}},
     plugins:{legend:{display:false},tooltip:{
       bodyFont:{size:11},titleFont:{size:11},
       callbacks:{label:ctx=>{
@@ -814,7 +819,7 @@ function chartOpts(stacked){
         return `${ctx.dataset.label}: ¥${Math.abs(raw).toLocaleString('ja-JP')}`;}}
     }},
     scales:{
-      x:{stacked,grid:{display:false},border:{display:false},
+      x:{stacked,grid:{display:false},border:{display:false},afterFit:a=>{a.height=34;},
         ticks:{font:{size:10},maxRotation:0,color:'#8C8480'}},
       y:{stacked,grid:{color:c=>c.tick&&c.tick.value===0?'#4a443e':'#EAE5DC',lineWidth:c=>c.tick&&c.tick.value===0?1.6:1},border:{display:false},
         ticks:{font:{size:10},color:'#8C8480',callback:yFmt}}
@@ -922,15 +927,32 @@ function makeMsPlugin(sc){
         const nm=ms.purpose.length>10?ms.purpose.slice(0,9)+'…':ms.purpose;
         items.push({py,text:`${nm}  ${fmS(ms.cum)}`});
       });
-      // ラベルは左寄せ・背景付き。線が近い場合は上へずらして重ならないようにする
+      // ラベルは左寄せ・背景付き。棒と重なる場合は右側へ、線が近い場合は上へずらす
+      const bars=[];
+      [0,1].forEach(di=>chart.getDatasetMeta(di).data.forEach((b,i)=>{
+        const q=b.getProps(['x','y','base','width'],true);
+        bars[i]=bars[i]||{x0:q.x-q.width/2,x1:q.x+q.width/2,top:Infinity,base:q.base};
+        bars[i].top=Math.min(bars[i].top,q.y,q.base);
+      }));
+      const zeroPx=y.getPixelForValue(0);
       items.sort((a,b)=>b.py-a.py);
-      let limit=Infinity;
+      const lastTop={L:Infinity,R:Infinity};
+      ctx.save();ctx.font='bold 9px system-ui,-apple-system,sans-serif';
       items.forEach(it=>{
-        let top=it.py-15;
-        if(top+14>limit-1)top=limit-15;
-        limit=top;
-        ctx.save();pill(ctx,x.left+3,top,it.text,{});ctx.restore();
+        const w=ctx.measureText(it.text).width+8;
+        const place=side=>{
+          let top=it.py-15;
+          if(top+14>lastTop[side]-1)top=lastTop[side]-15;
+          const x0=side==='L'?x.left+3:x.right-3-w,x1=x0+w;
+          const hit=bars.some(br=>br&&x1>br.x0&&x0<br.x1&&top+14>br.top-1&&top<zeroPx);
+          return{side,top,x0,hit};
+        };
+        const L=place('L'),R=place('R');
+        const c=!L.hit?L:(!R.hit?R:L);
+        lastTop[c.side]=c.top;
+        pill(ctx,c.x0,c.top,it.text,{});
       });
+      ctx.restore();
       // 圧縮区間の境目
       if(sc.compressed){
         const py=y.getPixelForValue(sc.T);
@@ -1005,8 +1027,14 @@ function makeForecastPlugin(fd){
   return{
     id:'fc-marks',
     afterDraw(chart){
-      // 出金がある月の棒の上に ▼ を付ける
+      // 選択中の棒を枠で囲む／出金がある月の棒の上に ▼ を付ける
       const{ctx,scales:{x,y}}=chart;
+      const bar=chart.getDatasetMeta(0).data[fcSel];
+      if(bar){const q=bar.getProps(['x','y','base','width'],true);
+        const top=Math.min(q.y,q.base),h=Math.abs(q.base-q.y);
+        ctx.save();ctx.strokeStyle='#1A1714';ctx.lineWidth=1.6;ctx.beginPath();
+        if(ctx.roundRect)ctx.roundRect(q.x-q.width/2-2,top-2,q.width+4,h+4,4);else ctx.rect(q.x-q.width/2-2,top-2,q.width+4,h+4);
+        ctx.stroke();ctx.restore();}
       const seen=new Set();
       fd.drops.forEach(d=>{
         if(seen.has(d.idx))return;seen.add(d.idx);
@@ -1025,15 +1053,11 @@ let fcSel=0,fcData=null;
 function fcDetailHtml(fd,i){
   const[y,m]=fd.months[i].split('-');
   const here=fd.drops.filter(d=>d.idx===i);
-  const prev=i>0?fd.values[i-1]:fd.bal;
-  let h=`<div style="font-weight:700;color:var(--text);margin-bottom:3px;">${y}年${+m}月末　残高 <span style="color:${fd.values[i]<0?'#d03b3b':'var(--text)'}">${fsign(fd.values[i])}</span></div>`;
-  if(i===0)h+='<div>最新の月末残高（ここがスタート）</div>';
-  else if(!here.length)h+='<div>この月の出金はありません</div>';
-  else{
-    let cur=prev;
-    h+=here.map(d=>{const before=cur;cur-=d.amount;
-      return`<div>▼ ${esc(d.name)}　<b style="color:#d4603a;">−${fsign(d.amount)}</b>　（${fsign(before)} → ${fsign(cur)}）</div>`;}).join('');
-  }
+  const nw='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+  let h=`<div style="${nw}font-weight:700;color:var(--text);">${y}年${+m}月末　残高 <span style="color:${fd.values[i]<0?'#d03b3b':'var(--text)'}">${fsign(fd.values[i])}</span></div>`;
+  if(i===0)h+=`<div style="${nw}">最新の月末残高（ここがスタート）</div>`;
+  else if(!here.length)h+=`<div style="${nw}">この月の出金はありません</div>`;
+  else h+=here.map(d=>`<div style="${nw}">▼ ${esc(d.name)}　<b style="color:#d4603a;">−${fsign(d.amount)}</b></div>`).join('');
   return h;
 }
 function fcColor(fd,i,sel){
@@ -1041,33 +1065,40 @@ function fcColor(fd,i,sel){
   const base=i===0?'#2a78d6':fd.values[i]<0?'#d03b3b':(fd.drops.some(d=>d.idx===i)?'#6f6862':'#C9C4BE');
   return base;
 }
-function fcBorder(i,sel){return sel?'#1A1714':'rgba(0,0,0,0)';}
 function fcSelect(i){
   fcSel=i;const fd=fcData;if(!fd||!chart3)return;
   chart3.data.datasets[0].backgroundColor=fd.values.map((_,k)=>fcColor(fd,k,k===i));
-  chart3.data.datasets[0].borderColor=fd.values.map((_,k)=>fcBorder(k,k===i));
   chart3.update('none');
   document.getElementById('fc-detail').innerHTML=fcDetailHtml(fd,i);
 }
 
+// Y軸の目盛りを全タブ共通の方法で作る（きりの良い値だけ。符号付き・M/K表記・軸幅固定）
+const yFmtS=v=>{const a=Math.abs(v);const t=a>=1e6?(a/1e6).toFixed(1)+'M':a>=1e3?Math.round(a/1e3)+'K':String(Math.round(a));return(v<0&&t!=='0'?'-':'')+t;};
+function finishY(o,cfg){
+  const y=o.scales.y;
+  const f=cfg.f||(v=>v),inv=cfg.inv||(v=>v);
+  y.ticks.callback=v=>yFmtS(Math.round(inv(v)));
+  y.afterFit=a=>{a.width=46;};
+  y.afterBuildTicks=axis=>{
+    const dmin=y.min,dmax=y.max,span=dmax-dmin;
+    const rmin=inv(dmin),rmax=inv(dmax);
+    const lo=Math.max(cfg.linLo===undefined?-Infinity:cfg.linLo,rmin);
+    const hi=Math.min(cfg.linHi===undefined?Infinity:cfg.linHi,rmax);
+    const step=niceStep(Math.max(hi-lo,1)/5);
+    const vals=[];
+    for(let v=Math.ceil(lo/step-1e-9)*step;v<=hi+1e-9;v+=step)vals.push(Math.round(v)||0);
+    (cfg.extras||[]).forEach(e=>{
+      if(e<rmin||e>rmax)return;
+      const d=f(e);
+      if(vals.every(v=>Math.abs(f(v)-d)>0.07*span))vals.push(Math.round(e));
+    });
+    axis.ticks=vals.map(v=>({value:f(v)})).sort((a,b)=>a.value-b.value);
+  };
+}
+
 function balChartOptions(sc,msList){
   const o=chartOpts(true);
-  const yFmt=v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':v;
   o.scales.y.max=sc.max;
-  o.scales.y.ticks.callback=v=>yFmt(Math.round(sc.inv(v)));
-  if(sc.compressed){
-    o.scales.y.afterBuildTicks=axis=>{
-      const step=niceStep(sc.T/4);
-      const vals=[];
-      for(let v=0;v<=sc.T;v+=step)vals.push(v);
-      let prev=sc.f(vals[vals.length-1]);
-      msList.map(m=>m.cum).filter(c=>c>sc.T).sort((a,b)=>a-b).forEach(c=>{
-        const d=sc.f(c);
-        if(d-prev>sc.max*0.08){vals.push(c);prev=d;}
-      });
-      axis.ticks=vals.map(v=>({value:sc.f(v)}));
-    };
-  }
   return o;
 }
 
@@ -1090,7 +1121,8 @@ function renderCharts(){
     if(d2){
       e2.style.display='none';has=true;
       chart2=new Chart(document.getElementById('chart-balance').getContext('2d'),
-        {type:'bar',data:d2,options:(()=>{const o=balChartOptions(d2.scale,d2.msList);applyZ(o,d2.scale.max,Z);return o;})(),plugins:[makeMsPlugin(d2.scale)]});
+        {type:'bar',data:d2,options:(()=>{const o=balChartOptions(d2.scale,d2.msList);applyZ(o,d2.scale.max,Z);
+          finishY(o,{f:d2.scale.f,inv:d2.scale.inv,linLo:-Math.max(0,-Math.min(0,...d2.datasets[1].raw)),linHi:d2.scale.compressed?d2.scale.T:undefined,extras:d2.scale.compressed?d2.msList.map(m=>m.cum).filter(c=>c>d2.scale.T):[]});return o;})(),plugins:[makeMsPlugin(d2.scale)]});
     } else { e2.style.display='block'; }
   } else if(chartTab==='contrib'){
     // 入金推移はマイルストーン線なし（純粋な入金額のみ）
@@ -1099,7 +1131,7 @@ function renderCharts(){
     if(d1){
       e1.style.display='none';has=true;
       chart1=new Chart(document.getElementById('chart-contrib').getContext('2d'),
-        {type:'bar',data:d1,options:(()=>{const o=chartOpts(true);applyZ(o,contribPos(d1),Z);return o;})()});
+        {type:'bar',data:d1,options:(()=>{const o=chartOpts(true);applyZ(o,contribPos(d1),Z);finishY(o,{linLo:0});return o;})()});
     } else { e1.style.display='block'; }
   } else {
     const fd=getForecastData();
@@ -1109,25 +1141,11 @@ function renderCharts(){
       e3.style.display='none';has=true;
       fcData=fd;if(fcSel>=fd.values.length)fcSel=0;
       const o=chartOpts(false);
-      const yFmt=v=>{const a=Math.abs(v),t=a>=1000000?(a/1000000).toFixed(1)+'M':a>=1000?Math.round(a/1000)+'K':a;return(v<0?'-':'')+t;};
       const sc=fd.sc;
       applyZ(o,sc.pos,Z);
-      o.scales.y.ticks.callback=v=>yFmt(Math.round(sc.inv(v)));
-      o.scales.y.afterBuildTicks=axis=>{
-        const step=niceStep(sc.P/3);
-        const real=[];
-        for(let v=0;v<=sc.P*1.0001;v+=step)real.push(v);
-        const lim=sc.compressed?sc.T:sc.negReal;
-        for(let v=step;v<=lim*1.0001;v+=step)real.push(-v);
-        if(sc.negReal>0){
-          const lastNeg=Math.min(...real);
-          if(sc.compressed?(sc.f(-sc.negReal)<sc.f(lastNeg)-0.1*(sc.pos+sc.neg)):lastNeg>-sc.negReal*0.999||real.every(v=>v>=0))real.push(-sc.negReal);
-        }
-        axis.ticks=real.map(v=>({value:sc.f(v)})).sort((a,b)=>a.value-b.value);
-      };
+      finishY(o,{f:sc.f,inv:sc.inv,linLo:sc.compressed?-sc.T:undefined,extras:sc.negReal>0?[-sc.negReal]:[]});
       o.plugins.tooltip={enabled:false};
       o.interaction={mode:'index',intersect:false};
-      o.layout={padding:{top:14,bottom:6,right:4}};
       o.onClick=(e,els,ch)=>{
         const r=ch.getElementsAtEventForMode(e,'index',{intersect:false},true);
         if(r.length)fcSelect(r[0].index);
@@ -1136,7 +1154,7 @@ function renderCharts(){
         type:'bar',
         data:{labels:fd.labels,datasets:[{label:'試算残高',data:fd.values.map(fd.sc.f),
           backgroundColor:fd.values.map((_,k)=>fcColor(fd,k,k===fcSel)),
-          borderColor:fd.values.map((_,k)=>fcBorder(k,k===fcSel)),borderWidth:2,
+          borderWidth:0,
           borderRadius:3,borderSkipped:false}]},
         options:o,plugins:[makeForecastPlugin(fd)]});
       document.getElementById('fc-detail').innerHTML=fcDetailHtml(fd,fcSel);
@@ -1339,6 +1357,12 @@ const DEFAULT_CONFIG={
   appId:"1:531352480523:web:e7217b5d574550fd77d00e"
 };
 
+function fitVars(){
+  const h=document.querySelector('.hdr'),n=document.querySelector('.bot-nav');
+  if(h)document.documentElement.style.setProperty('--hdr-h',h.offsetHeight+'px');
+  if(n)document.documentElement.style.setProperty('--nav-h',n.offsetHeight+'px');
+}
+fitVars();window.addEventListener('resize',fitVars);window.addEventListener('load',fitVars);
 loadLocal();
 document.getElementById('c-date').value=today();
 renderAll();
