@@ -557,7 +557,7 @@ function stats(){
   const tw=ws.reduce((s,w)=>s+(w.amount||0),0);
   const cel=cs.filter(c=>c.category==='タッキーちゃんのお祝い金').reduce((s,c)=>s+c.amount,0);
   const net=tc-tw;
-  // 口座残高 = 最新の手入力残高 − 残高入力より後に記録した引き出し
+  // 口座残高 = 最新の手入力残高（月末） − 残高の月より後の月の引き出し
   const byMonth=getBalByMonth();
   const months=Object.keys(byMonth).sort();
   const lb=months.length?byMonth[months[months.length-1]]:null;
@@ -566,9 +566,10 @@ function stats(){
   return{tc,tw,cel,net,bal,gain:bal-net};
 }
 function withdrawnAfter(entry){
-  const t=entry.updatedAt||entry.createdAt||0;
+  // 手入力残高は月末残高。その月より後の月の引き出しだけを差し引く
+  const m=entry.date.slice(0,7);
   return Object.values(data.withdrawals||{})
-    .filter(w=>(w.createdAt||0)>t).reduce((s,w)=>s+(w.amount||0),0);
+    .filter(w=>w.date.slice(0,7)>m).reduce((s,w)=>s+(w.amount||0),0);
 }
 function milestones(){
   const{bal}=stats();let cum=0;
@@ -798,9 +799,8 @@ function getBalData(){
   const cs=Object.values(data.contributions||{});
   const ws=Object.values(data.withdrawals||{});
   const labels=sortedMonths.map((m,i)=>{const[y,mo]=m.split('-');const py=i>0?sortedMonths[i-1].split('-')[0]:null;return py!==y?[`${+mo}月`,y]:`${+mo}月`;});
-  const last=sortedMonths.length-1;
-  // 最新月だけ、残高入力後に記録した引き出しを差し引く
-  const balArr=sortedMonths.map((m,i)=>byMonth[m].balance-(i===last?withdrawnAfter(byMonth[m]):0));
+  // 各月の棒は、その月の月末残高と、その月までの入出金で計算する
+  const balArr=sortedMonths.map(m=>byMonth[m].balance);
   const netArr=sortedMonths.map(ym=>{
     const tc=cs.filter(c=>c.date.slice(0,7)<=ym).reduce((s,c)=>s+c.amount,0);
     const tw=ws.filter(w=>w.date.slice(0,7)<=ym).reduce((s,w)=>s+w.amount,0);
