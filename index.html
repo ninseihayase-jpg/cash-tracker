@@ -114,7 +114,7 @@
       padding:10px 8px 8px;min-width:0;}
     .chart-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
       letter-spacing:.05em;margin-bottom:6px;}
-    .chart-canvas-wrap{position:relative;flex:1;min-height:0;}
+    .chart-canvas-wrap{position:relative;flex:1;min-height:150px;}
     /* ホームの1画面目：マイルストーン＋グラフが画面に収まる */
     .home-top{height:calc(100vh - var(--hdr-h) - var(--nav-h) - 24px);
       height:calc(100dvh - var(--hdr-h) - var(--nav-h) - 24px);
@@ -282,9 +282,8 @@
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2a78d6;margin-right:3px;"></span>達生お祝い金</span>
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>にん出資</span>
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e87ba4;margin-right:3px;"></span>あみ出資</span>
-        <div class="lg-fc" style="flex:1 1 100%;line-height:1.55;">
-          <div id="fc-detail" style="background:var(--bg);border-radius:8px;padding:6px 8px;margin-bottom:5px;font-size:11px;color:var(--muted);"></div>
-          <div id="fc-note"></div>
+        <div class="lg-fc" style="flex:1 1 100%;line-height:1.5;">
+          <div id="fc-detail" style="background:var(--bg);border-radius:8px;padding:5px 8px;height:52px;overflow-y:auto;font-size:11px;color:var(--muted);"></div>
         </div>
         <span class="lg-bal" style="margin-left:4px;font-weight:600;color:var(--text);">月末残高の内訳：</span>
         <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B0ACAA;margin-right:3px;"></span>純出資額</span>
@@ -292,6 +291,14 @@
         <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d03b3b;margin-right:3px;"></span>損失</span>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- 将来推移の解説（1画面目の下） -->
+<div class="sec" id="fc-explain" style="display:none;">
+  <div class="card" style="padding:12px 14px;font-size:12px;line-height:1.7;color:var(--muted);">
+    <div style="font-weight:700;color:var(--text);margin-bottom:4px;">将来推移の見かた</div>
+    <div id="fc-note"></div>
   </div>
 </div>
 
@@ -1034,6 +1041,7 @@ function renderCharts(){
   if(typeof Chart==='undefined')return;
   const legendEl=document.getElementById('chart-legend');
   const show=(cls,on)=>document.querySelectorAll('#chart-legend .'+cls).forEach(e=>e.style.display=on?'':'none');
+  document.getElementById('fc-explain').style.display=chartTab==='forecast'?'':'none';
   show('lg-bal',chartTab==='balance');show('lg-contrib',chartTab==='contrib');show('lg-fc',chartTab==='forecast');
 
   if(chart1){chart1.destroy();chart1=null;}
@@ -1082,7 +1090,7 @@ function renderCharts(){
         options:o,plugins:[makeForecastPlugin(fd)]});
       document.getElementById('fc-detail').innerHTML=fcDetailHtml(fd,fcSel);
       document.getElementById('fc-note').innerHTML=
-        `棒をタップすると、その月の出金が見られます（▼の月が出金あり）。試算：入金・運用益は含めず、各期限月に目標額を出金 → 最終月末残高 <b style="color:${fd.endBal<0?'#d03b3b':'var(--text)'}">${fsign(fd.endBal)}</b>`;
+        `・横軸は月、棒は各月の月末の試算残高です。一番左が最新の月末残高です。<br>・棒をタップすると、その月の出金内容が見られます（▼の月が出金あり）。<br>・各マイルストーンの期限月に、そのマイルストーンの追加目標額を出金する想定です。今後の入金・運用益は含めていません。<br>・最終月末残高：<b style="color:${fd.endBal<0?'#d03b3b':'var(--text)'}">${fsign(fd.endBal)}</b>`;
     }
   }
   legendEl.style.display=has?'block':'none';
