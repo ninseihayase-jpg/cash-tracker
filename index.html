@@ -38,6 +38,7 @@
     }
     .hdr-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
     .hdr-logo{font-size:14px;font-weight:700;color:#fff;letter-spacing:.03em;}
+    .hdr-asof{flex:1;margin-left:8px;font-size:11px;font-weight:700;color:rgba(255,255,255,.75);}
     .hdr-badge{font-size:10px;font-weight:600;color:rgba(255,255,255,.6);
       background:rgba(255,255,255,.1);border-radius:20px;padding:3px 9px;}
     .hdr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
@@ -76,15 +77,16 @@
       padding:5px 13px;font-size:12px;font-weight:700;cursor:pointer;}
 
     /* ── MILESTONE H-SCROLL ── */
-    .ms-scroll{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;
-      -webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain;
-      margin:0 -12px;padding:2px 12px 4px;scroll-padding:0 12px;}
+    .ms-scroll{position:relative;display:flex;gap:10px;overflow-x:auto;
+      scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+      overscroll-behavior-x:contain;margin:0 -12px;padding:4px 7% 8px;}
     .ms-scroll::-webkit-scrollbar{display:none;}
-    .ms-card-wrap{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;}
-    .ms-card{background:var(--card);border-radius:14px;border:1px solid var(--border);
-      box-shadow:0 2px 8px rgba(0,0,0,.06);padding:11px 13px;height:100%;}
-    .ms-dots{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:5px;}
-    .ms-dot{width:5px;height:5px;border-radius:3px;background:var(--border);transition:all .2s;}
+    .ms-card-wrap{flex:0 0 86%;scroll-snap-align:center;}
+    .ms-card{background:var(--card);border-radius:16px;border:1px solid var(--border);
+      box-shadow:0 4px 14px rgba(0,0,0,.08);padding:11px 13px;height:100%;
+      transform-origin:center;will-change:transform,opacity;}
+    .ms-dots{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:2px;}
+    .ms-dot{width:5px;height:5px;border-radius:3px;background:var(--border);transition:width .25s,background .25s;}
     .ms-dot.on{width:14px;background:var(--accent);}
     .ms-count{font-size:10px;color:var(--muted);font-weight:600;margin-left:6px;}
     .ms-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;}
@@ -216,11 +218,12 @@
 <header class="hdr">
   <div class="hdr-row1">
     <span class="hdr-logo">投資管理</span>
+    <span class="hdr-asof" id="hdr-asof"></span>
     <span class="hdr-badge" id="sync-status">ローカル</span>
   </div>
   <div class="hdr-grid">
     <div class="hdr-stat">
-      <div class="hdr-lbl">口座残高</div>
+      <div class="hdr-lbl">月末残高</div>
       <div class="hdr-val" id="hdr-balance">¥0</div>
       <div class="hdr-sub" id="hdr-gain">収益 ¥0</div>
     </div>
@@ -257,10 +260,15 @@
       <div class="chart-tabs">
         <button class="chart-tab active" id="tab-balance" onclick="setChartTab('balance')">残高推移</button>
         <button class="chart-tab" id="tab-contrib" onclick="setChartTab('contrib')">入金推移</button>
+        <button class="chart-tab" id="tab-forecast" onclick="setChartTab('forecast')">将来推移</button>
       </div>
       <div class="chart-canvas-wrap" id="cw-balance">
         <canvas id="chart-balance"></canvas>
         <div class="chart-empty" id="chart-balance-empty" style="display:none;">データなし</div>
+      </div>
+      <div class="chart-canvas-wrap" id="cw-forecast" style="display:none;">
+        <canvas id="chart-forecast"></canvas>
+        <div class="chart-empty" id="chart-forecast-empty" style="display:none;"></div>
       </div>
       <div class="chart-canvas-wrap" id="cw-contrib" style="display:none;">
         <canvas id="chart-contrib"></canvas>
@@ -274,7 +282,11 @@
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2a78d6;margin-right:3px;"></span>達生お祝い金</span>
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#eb6834;margin-right:3px;"></span>にん出資</span>
         <span class="lg-contrib"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e87ba4;margin-right:3px;"></span>あみ出資</span>
-        <span class="lg-bal" style="margin-left:4px;font-weight:600;color:var(--text);">残高：</span>
+        <div class="lg-fc" style="flex:1 1 100%;line-height:1.55;">
+          <div id="fc-detail" style="background:var(--bg);border-radius:8px;padding:6px 8px;margin-bottom:5px;font-size:11px;color:var(--muted);"></div>
+          <div id="fc-note"></div>
+        </div>
+        <span class="lg-bal" style="margin-left:4px;font-weight:600;color:var(--text);">月末残高の内訳：</span>
         <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B0ACAA;margin-right:3px;"></span>純出資額</span>
         <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1baf7a;margin-right:3px;"></span>収益</span>
         <span class="lg-bal"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#d03b3b;margin-right:3px;"></span>損失</span>
@@ -354,7 +366,7 @@
 <div id="pg-balance" class="page">
   <div class="sec">
     <div class="sec-hdr">
-      <span class="sec-title">月次残高（楽天証券）</span>
+      <span class="sec-title">月末残高（楽天証券）</span>
       <span style="font-size:11px;color:var(--muted);">金額を入力してEnter</span>
     </div>
     <div class="card" id="bal-list"><div class="empty">まず出資を記録してください</div></div>
@@ -567,26 +579,24 @@ async function dbDel(path,id){
 // ═══════════════════════════════════════
 //  COMPUTED
 // ═══════════════════════════════════════
+// すべて「最新の月末残高の月」時点で統一して集計する
+//  月末残高 = その月の手入力残高 / 入金・引き出し = その月末までの累計
+//  投資収益 = 月末残高 − 純出資額（純出資額 = 入金累計 − 引き出し累計）
+function asOfMonth(){
+  const ms=Object.keys(getBalByMonth()).sort();
+  return ms.length?ms[ms.length-1]:null;
+}
 function stats(){
-  const cs=Object.values(data.contributions||{});
-  const ws=Object.values(data.withdrawals||{});
+  const M=asOfMonth();
+  const upto=x=>!M||x.date.slice(0,7)<=M;
+  const cs=Object.values(data.contributions||{}).filter(upto);
+  const ws=Object.values(data.withdrawals||{}).filter(upto);
   const tc=cs.reduce((s,c)=>s+(c.amount||0),0);
   const tw=ws.reduce((s,w)=>s+(w.amount||0),0);
   const cel=cs.filter(c=>c.category==='タッキーちゃんのお祝い金').reduce((s,c)=>s+c.amount,0);
   const net=tc-tw;
-  // 口座残高 = 最新の手入力残高（月末） − 残高の月より後の月の引き出し
-  const byMonth=getBalByMonth();
-  const months=Object.keys(byMonth).sort();
-  const lb=months.length?byMonth[months[months.length-1]]:null;
-  const bal=lb?lb.balance-withdrawnAfter(lb):0;
-  // 投資収益 = 口座残高 + 引き出し合計 − 入金合計（引き出しだけでは増減しない）
-  return{tc,tw,cel,net,bal,gain:bal-net};
-}
-function withdrawnAfter(entry){
-  // 手入力残高は月末残高。その月より後の月の引き出しだけを差し引く
-  const m=entry.date.slice(0,7);
-  return Object.values(data.withdrawals||{})
-    .filter(w=>w.date.slice(0,7)>m).reduce((s,w)=>s+(w.amount||0),0);
+  const bal=M?getBalByMonth()[M].balance:0;
+  return{tc,tw,cel,net,bal,gain:bal-net,asOf:M};
 }
 function milestones(){
   const{bal}=stats();let cum=0;
@@ -615,7 +625,8 @@ function thisMonth(){const d=new Date();return d.getFullYear()+'-'+String(d.getM
 function renderAll(){renderHdr();renderMS();renderContrib();renderWithdraw();renderBal();renderCharts();}
 
 function renderHdr(){
-  const{tc,tw,cel,net,bal,gain}=stats();
+  const{tc,tw,cel,net,bal,gain,asOf}=stats();
+  document.getElementById('hdr-asof').textContent=asOf?`${fdYM(asOf+'-01')}末時点`:'残高未入力';
   document.getElementById('hdr-balance').textContent=fm(bal);
   const ge=document.getElementById('hdr-gain');
   ge.textContent=(gain>=0?'+':'')+fm(gain);
@@ -654,13 +665,25 @@ function renderMS(){
     </div></div>`;
   }).join('')+'</div>'+(list.length>1?'<div class="ms-dots">'+list.map((_,i)=>`<span class="ms-dot${i?'':' on'}"></span>`).join('')+'</div>':'');
   const sc=el.querySelector('.ms-scroll');
+  const cards=[...sc.children];
+  let raf=0;
   const upd=()=>{
-    const w=sc.firstElementChild.getBoundingClientRect().width+10;
-    const i=Math.max(0,Math.min(list.length-1,Math.round(sc.scrollLeft/w)));
-    el.querySelectorAll('.ms-dot').forEach((d,k)=>d.classList.toggle('on',k===i));
-    cnt.textContent=list.length>1?` ${i+1}/${list.length}`:'';
+    raf=0;
+    const mid=sc.scrollLeft+sc.clientWidth/2;
+    let best=0,bd=1e9;
+    cards.forEach((c,k)=>{
+      const cw=c.offsetWidth;
+      const d=(c.offsetLeft+cw/2-mid)/(cw+10);   // 中央からの距離（カード何枚分か）
+      const a=Math.min(Math.abs(d),1);
+      const inner=c.firstElementChild;
+      inner.style.transform=`scale(${1-0.08*a})`;     // 端のカードは少し小さく
+      inner.style.opacity=1-0.5*a;                    // 端のカードは薄く
+      if(Math.abs(d)<bd){bd=Math.abs(d);best=k;}
+    });
+    el.querySelectorAll('.ms-dot').forEach((d,k)=>d.classList.toggle('on',k===best));
+    cnt.textContent=(list.length>1?` ${best+1}/${list.length}　`:' ')+(stats().asOf?`※${fdYM(stats().asOf+'-01')}末残高基準`:'');
   };
-  sc.addEventListener('scroll',upd,{passive:true});
+  sc.addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(upd);},{passive:true});
   sc.scrollLeft=prevLeft;upd();
 }
 
@@ -736,7 +759,7 @@ function renderBal(){
     const entry=byMonth[m];
     const disp=entry?entry.balance.toLocaleString('ja-JP'):'';
     return`<div class="bal-row">
-      <div class="bal-ym">${fdYM(m)}</div>
+      <div class="bal-ym">${fdYM(m)}末</div>
       <div class="bal-right">
         <input type="text" class="bal-inline-input" data-month="${m}"
           value="${esc(disp)}" placeholder="未入力" inputmode="numeric"
@@ -765,10 +788,10 @@ function setHistTab(t){
 
 function setChartTab(t){
   chartTab=t;
-  document.getElementById('tab-balance').classList.toggle('active',t==='balance');
-  document.getElementById('tab-contrib').classList.toggle('active',t==='contrib');
-  document.getElementById('cw-balance').style.display=t==='balance'?'':'none';
-  document.getElementById('cw-contrib').style.display=t==='contrib'?'':'none';
+  ['balance','contrib','forecast'].forEach(k=>{
+    document.getElementById('tab-'+k).classList.toggle('active',t===k);
+    document.getElementById('cw-'+k).style.display=t===k?'':'none';
+  });
   renderCharts();
 }
 
@@ -857,6 +880,20 @@ function getBalData(){
   ]};
 }
 
+function pill(ctx,x,y,text,o){
+  // 背景付きラベル。x,yは左上（right指定時は右上）
+  ctx.font=o.font||'bold 9px system-ui,-apple-system,sans-serif';
+  const w=ctx.measureText(text).width+8,h=14,l=o.right?x-w:x;
+  ctx.fillStyle=o.bg||'rgba(255,255,255,.9)';
+  ctx.strokeStyle=o.border||'rgba(212,96,58,.35)';ctx.lineWidth=1;
+  ctx.beginPath();
+  if(ctx.roundRect)ctx.roundRect(l,y,w,h,5);else ctx.rect(l,y,w,h);
+  ctx.fill();ctx.stroke();
+  ctx.fillStyle=o.color||'rgba(190,80,45,1)';
+  ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText(text,l+4,y+h/2+.5);
+}
+
 function makeMsPlugin(sc){
   return{
     id:'ms-lines',
@@ -864,35 +901,111 @@ function makeMsPlugin(sc){
       const msList=milestones();
       if(!msList.length)return;
       const{ctx,scales:{x,y}}=chart;
+      const items=[];
       msList.forEach(ms=>{
         const py=y.getPixelForValue(sc.f(ms.cum));
         if(py<y.top-2||py>y.bottom+2)return;
         ctx.save();
-        ctx.strokeStyle='rgba(212,96,58,.8)';
+        ctx.strokeStyle='rgba(212,96,58,.75)';
         ctx.lineWidth=1.2;
         ctx.setLineDash([5,3]);
         ctx.beginPath();ctx.moveTo(x.left,py);ctx.lineTo(x.right,py);ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle='rgba(212,96,58,.95)';
-        ctx.font='bold 9px system-ui,-apple-system,sans-serif';
-        ctx.textAlign='right';ctx.textBaseline='bottom';
-        const nm=ms.purpose.length>8?ms.purpose.slice(0,7)+'…':ms.purpose;
-        ctx.fillText(`${nm} ${fmS(ms.cum)}`,x.right,py-2);
         ctx.restore();
+        const nm=ms.purpose.length>10?ms.purpose.slice(0,9)+'…':ms.purpose;
+        items.push({py,text:`${nm}  ${fmS(ms.cum)}`});
       });
-      // 圧縮区間の境目を示す
+      // ラベルは左寄せ・背景付き。線が近い場合は上へずらして重ならないようにする
+      items.sort((a,b)=>b.py-a.py);
+      let limit=Infinity;
+      items.forEach(it=>{
+        let top=it.py-15;
+        if(top+14>limit-1)top=limit-15;
+        limit=top;
+        ctx.save();pill(ctx,x.left+3,top,it.text,{});ctx.restore();
+      });
+      // 圧縮区間の境目
       if(sc.compressed){
         const py=y.getPixelForValue(sc.T);
         ctx.save();
         ctx.strokeStyle='rgba(140,132,128,.6)';ctx.lineWidth=1;
-        ctx.beginPath();ctx.moveTo(x.left,py);ctx.lineTo(x.left+12,py);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x.right-12,py);ctx.lineTo(x.right,py);ctx.stroke();
         ctx.fillStyle='rgba(140,132,128,.9)';ctx.font='9px system-ui,sans-serif';
-        ctx.textAlign='left';ctx.textBaseline='bottom';
-        ctx.fillText('≈ ここから上は圧縮',x.left+16,py-1);
+        ctx.textAlign='right';ctx.textBaseline='bottom';
+        ctx.fillText('≈ これより上は圧縮',x.right-16,py-1);
         ctx.restore();
       }
     }
   };
+}
+
+// ── 将来推移：最新の月末残高から、各マイルストーンの期限月に目標額を出金していく試算
+function ymAdd(ym,n){const[y,m]=ym.split('-').map(Number);const t=y*12+(m-1)+n;return`${Math.floor(t/12)}-${String(t%12+1).padStart(2,'0')}`;}
+function ymDiff(a,b){const[y1,m1]=a.split('-').map(Number),[y2,m2]=b.split('-').map(Number);return(y2-y1)*12+(m2-m1);}
+
+function getForecastData(){
+  const byMonth=getBalByMonth();
+  const bm=Object.keys(byMonth).sort();
+  if(!bm.length)return{empty:'残高を入力してください'};
+  const startM=bm[bm.length-1];
+  const{bal}=stats();
+  const ms=Object.values(data.milestones||{}).filter(m=>m.deadline&&m.deadline.slice(0,7)>startM)
+    .sort((a,b)=>a.deadline.localeCompare(b.deadline));
+  if(!ms.length)return{empty:'最新の月末残高より後のマイルストーンがありません'};
+  const endM=ymAdd(ms[ms.length-1].deadline.slice(0,7),1);
+  const n=ymDiff(startM,endM);
+  const months=[];for(let i=0;i<=n;i++)months.push(ymAdd(startM,i));
+  const labels=months.map((m,i)=>{const[y,mo]=m.split('-');const py=i>0?months[i-1].split('-')[0]:null;return(py!==y)?[`${+mo}月`,y]:`${+mo}月`;});
+  const drops=ms.map(m=>({idx:ymDiff(startM,m.deadline.slice(0,7)),amount:m.amount,name:m.purpose}));
+  const values=months.map((m,i)=>bal-drops.filter(d=>d.idx<=i).reduce((s,d)=>s+d.amount,0));
+  return{labels,months,values,drops,startM,bal,endBal:values[values.length-1]};
+}
+
+const fsign=v=>(v<0?'-':'')+'¥'+Math.abs(Math.round(v)).toLocaleString('ja-JP');
+
+function makeForecastPlugin(fd){
+  return{
+    id:'fc-marks',
+    afterDraw(chart){
+      // 出金がある月の棒の上に ▼ を付ける
+      const{ctx,scales:{x,y}}=chart;
+      const seen=new Set();
+      fd.drops.forEach(d=>{
+        if(seen.has(d.idx))return;seen.add(d.idx);
+        const px=x.getPixelForValue(d.idx);
+        const v=fd.values[d.idx];
+        const py=(v>=0?y.getPixelForValue(v):y.getPixelForValue(0))-5;
+        ctx.save();ctx.fillStyle='#d4603a';
+        ctx.beginPath();ctx.moveTo(px-4,py-6);ctx.lineTo(px+4,py-6);ctx.lineTo(px,py);ctx.closePath();ctx.fill();
+        ctx.restore();
+      });
+    }
+  };
+}
+
+let fcSel=0,fcData=null;
+function fcDetailHtml(fd,i){
+  const[y,m]=fd.months[i].split('-');
+  const here=fd.drops.filter(d=>d.idx===i);
+  const prev=i>0?fd.values[i-1]:fd.bal;
+  let h=`<div style="font-weight:700;color:var(--text);margin-bottom:3px;">${y}年${+m}月末　残高 <span style="color:${fd.values[i]<0?'#d03b3b':'var(--text)'}">${fsign(fd.values[i])}</span></div>`;
+  if(i===0)h+='<div>最新の月末残高（ここがスタート）</div>';
+  else if(!here.length)h+='<div>この月の出金はありません</div>';
+  else{
+    let cur=prev;
+    h+=here.map(d=>{const before=cur;cur-=d.amount;
+      return`<div>▼ ${esc(d.name)}　<b style="color:#d4603a;">−${fsign(d.amount)}</b>　（${fsign(before)} → ${fsign(cur)}）</div>`;}).join('');
+  }
+  return h;
+}
+function fcColor(fd,i,sel){
+  const base=fd.values[i]<0?'#d03b3b':(fd.drops.some(d=>d.idx===i)?'#d4603a':'#2a78d6');
+  return sel?base:base+'8c';
+}
+function fcSelect(i){
+  fcSel=i;const fd=fcData;if(!fd||!chart3)return;
+  chart3.data.datasets[0].backgroundColor=fd.values.map((_,k)=>fcColor(fd,k,k===i));
+  chart3.update('none');
+  document.getElementById('fc-detail').innerHTML=fcDetailHtml(fd,i);
 }
 
 function balChartOptions(sc,msList){
@@ -916,17 +1029,18 @@ function balChartOptions(sc,msList){
   return o;
 }
 
+let chart3=null;
 function renderCharts(){
   if(typeof Chart==='undefined')return;
   const legendEl=document.getElementById('chart-legend');
-  const isBal=chartTab==='balance';
-  document.querySelectorAll('#chart-legend .lg-bal').forEach(e=>e.style.display=isBal?'':'none');
-  document.querySelectorAll('#chart-legend .lg-contrib').forEach(e=>e.style.display=isBal?'none':'');
+  const show=(cls,on)=>document.querySelectorAll('#chart-legend .'+cls).forEach(e=>e.style.display=on?'':'none');
+  show('lg-bal',chartTab==='balance');show('lg-contrib',chartTab==='contrib');show('lg-fc',chartTab==='forecast');
 
   if(chart1){chart1.destroy();chart1=null;}
   if(chart2){chart2.destroy();chart2=null;}
+  if(chart3){chart3.destroy();chart3=null;}
   let has=false;
-  if(isBal){
+  if(chartTab==='balance'){
     const d2=getBalData();
     const e2=document.getElementById('chart-balance-empty');
     if(d2){
@@ -934,7 +1048,7 @@ function renderCharts(){
       chart2=new Chart(document.getElementById('chart-balance').getContext('2d'),
         {type:'bar',data:d2,options:balChartOptions(d2.scale,d2.msList),plugins:[makeMsPlugin(d2.scale)]});
     } else { e2.style.display='block'; }
-  } else {
+  } else if(chartTab==='contrib'){
     // 入金推移はマイルストーン線なし（純粋な入金額のみ）
     const d1=getContribData();
     const e1=document.getElementById('chart-contrib-empty');
@@ -943,6 +1057,33 @@ function renderCharts(){
       chart1=new Chart(document.getElementById('chart-contrib').getContext('2d'),
         {type:'bar',data:d1,options:chartOpts(true)});
     } else { e1.style.display='block'; }
+  } else {
+    const fd=getForecastData();
+    const e3=document.getElementById('chart-forecast-empty');
+    if(fd.empty){ e3.textContent=fd.empty;e3.style.display='block'; }
+    else{
+      e3.style.display='none';has=true;
+      fcData=fd;if(fcSel>=fd.values.length)fcSel=0;
+      const o=chartOpts(false);
+      const yFmt=v=>Math.abs(v)>=1000000?(v/1000000).toFixed(1)+'M':Math.abs(v)>=1000?Math.round(v/1000)+'K':v;
+      o.scales.y.ticks.callback=yFmt;
+      o.plugins.tooltip={enabled:false};
+      o.interaction={mode:'index',intersect:false};
+      o.layout={padding:{top:14}};
+      o.onClick=(e,els,ch)=>{
+        const r=ch.getElementsAtEventForMode(e,'index',{intersect:false},true);
+        if(r.length)fcSelect(r[0].index);
+      };
+      chart3=new Chart(document.getElementById('chart-forecast').getContext('2d'),{
+        type:'bar',
+        data:{labels:fd.labels,datasets:[{label:'試算残高',data:fd.values,
+          backgroundColor:fd.values.map((_,k)=>fcColor(fd,k,k===fcSel)),
+          borderRadius:3,borderSkipped:false}]},
+        options:o,plugins:[makeForecastPlugin(fd)]});
+      document.getElementById('fc-detail').innerHTML=fcDetailHtml(fd,fcSel);
+      document.getElementById('fc-note').innerHTML=
+        `棒をタップすると、その月の出金が見られます（▼の月が出金あり）。試算：入金・運用益は含めず、各期限月に目標額を出金 → 最終月末残高 <b style="color:${fd.endBal<0?'#d03b3b':'var(--text)'}">${fsign(fd.endBal)}</b>`;
+    }
   }
   legendEl.style.display=has?'block':'none';
 }
